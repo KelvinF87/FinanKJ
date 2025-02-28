@@ -55,6 +55,13 @@ export const Dashboard = () => {
           <div className="stat-value">1,200{monedas}</div>
           <div className="stat-desc">↘︎ 90 (14%)</div>
         </div>
+
+
+        <div className="stat place-items-center">
+          <div className="stat-title">Balance</div>
+          <div className="stat-value text-secondary">2,200{monedas}</div>
+          <div className="stat-desc">↘︎ 90 (14%)</div>
+        </div>
       </div>
       <select className="select select-bordered w-full max-w-xs" value={typeChart} onChange={controlType}>
         <option disabled>Tipo de Gráficos</option>

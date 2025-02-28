@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Menu, X, Home, Info, Settings, WrapText } from "lucide-react";
+import { useNavigate } from "react-router";
 
 export default function Sidebar({ navigations }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -8,8 +9,12 @@ export default function Sidebar({ navigations }) {
   function classNames(...classes) {
     return classes.filter(Boolean).join(" ");
   }
-
+  const navegacion = useNavigate();
+  function redireccion(uri) {
+    navegacion(uri);
+  }
   return (
+
     <div className="flex ">
       {/* Botón para abrir/cerrar el sidebar */}
       <button
@@ -33,7 +38,8 @@ export default function Sidebar({ navigations }) {
           {navigation.map((item) => (
             <a
               key={item.name}
-              href={item.href}
+              // href={item.href}
+              onClick={() =>redireccion(item.href)}
               aria-current={item.current ? "page" : undefined}
               className="flex items-center gap-2 p-3 hover:bg-gray-700 rounded cursor-pointer"
             >
