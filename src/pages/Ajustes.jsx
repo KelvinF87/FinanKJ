@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { AuthContext } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router';
 
 
@@ -14,7 +14,7 @@ export const Ajustes = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const { logout, login,token } = useAuth();
+  const { logout, login,token } = AuthContext();
   const navigate=useNavigate();
     useEffect(() => {
       // login('admin', 'password');

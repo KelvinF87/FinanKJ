@@ -1,66 +1,88 @@
-import React, { createContext, useState, useEffect, useContext } from "react";
+import axios from "axios";
+import React, { useState, useEffect } from "react";
+const API_URL = import.meta.env.SERVER_URI;
 
-const AuthContext = createContext();
+const AuthContext = React.createContext();
 
-const usersData = [
-  {
-    name: "Kelvin",
-    id: "1",
-    username: "kelvin",
-    password: "123", // En un entorno real, usa hashes de contraseñas
-    email: "correo@mi.com",
-    roles: ["user", "admin"],
-  },
-  {
-    name: "Daniel",
-    id: "2",
-    username: "daniel",
-    password: "123",
-    email: "correo@mi.com",
-    roles: ["user"],
-  },
-];
-
-export const AuthProvider = ({ children }) => {
+function AuthProviderWrapper(props) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [authError, setAuthError] = useState(null);
+
+  const storeToken = (token) => {
+    localStorage.setItem("authToken", token);
+  };
+
+  const authenticateUser = () => {
+    // Get the stored token from the localStorage
+    const storedToken = localStorage.getItem("authToken");
+
+    // If the token exists in the localStorage
+    if (storedToken) {
+      // We must send the JWT token in the request's "Authorization" Headers
+      axios
+        .get(`${API_URL}/auth/verify`, {
+          headers: { Authorization: `Bearer ${storedToken}` },
+        })
+        .then((response) => {
+          // If the server verifies that JWT token is valid
+          const user = response.data;
+          // Update state variables
+          setIsLoggedIn(true);
+          setIsLoading(false);
+          setUser(user);
+        })
+        .catch((error) => {
+          if (error) {
+            setAuthError(error.response.data.message);
+            return;
+          }
+          // If the server sends an error response (invalid token)
+          // Update state variables
+          setIsLoggedIn(false);
+          setIsLoading(false);
+          setUser(null);
+        });
+    } else {
+      // If the token is not available
+      setIsLoggedIn(false);
+      setIsLoading(false);
+      setUser(null);
+    }
+  };
+
+  const removeToken = () => {
+    // Upon logout, remove the token from the localStorage
+    localStorage.removeItem("authToken");
+  };
+
+  const logOutUser = () => {
+    removeToken();
+    authenticateUser();
+  };
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const storedToken = localStorage.getItem("token");
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
-      setToken(storedToken);
-    }
+    // Run the function after the initial render,
+    // after the components in the App render for the first time.
+    authenticateUser();
   }, []);
 
-  const login = (username, password) => {
-    const userData = usersData.find(user => user.username === username);
-    if (userData && userData.password === password) {
-      setUser(userData);
-      setToken("123"); // En un entorno real, genera un token dinámico
-
-      localStorage.setItem("user", JSON.stringify(userData));
-      localStorage.setItem("token", "123");
-
-      return true;
-    }
-    return false;
-  };
-
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-  };
-
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout, token }}>
-      {children}
+    <AuthContext.Provider
+      value={{
+        isLoggedIn,
+        isLoading,
+        user,
+        storeToken,
+        authenticateUser,
+        logOutUser,
+        authError,
+      }}
+    >
+      {props.children}
     </AuthContext.Provider>
   );
-};
+}
 
-export const useAuth = () => useContext(AuthContext);
+export { AuthProviderWrapper, AuthContext };

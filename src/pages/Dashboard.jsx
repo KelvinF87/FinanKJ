@@ -1,6 +1,6 @@
 import React, { use, useEffect, useState } from "react";
 import { AgCharts } from "ag-charts-react";
-import { useAuth } from "../contexts/AuthContext";
+import { AuthContext } from "../contexts/AuthContext";
 import { useNavigate } from "react-router";
 
 const monedas = "€";
@@ -31,7 +31,8 @@ const estadisticas = {
 };
 
 export const Dashboard = () => {
-  const { logout, login, token } = useAuth();
+  // const { logout, login, token } = AuthContext;
+  const token = localStorage.getItem("authToken")
   const [typeChart, setTypeChart] = useState("bar");
   const [ingresosChartOptions, setIngresosChartOptions] = useState({
     data: [
@@ -126,12 +127,12 @@ export const Dashboard = () => {
           <option value="line">Line</option>
         </select>
         <div className="bg-auto flex flex-row justify-center items-center flex-wrap gap-6 sm:gap-0">
-          <div className="w-full sm:w-140">
-            <h2 className="stat-value sm:text-left text-center">Ingresos</h2>
+          <div className="w-full sm:w-140 m-3">
+            <h2 className="stat-value  text-center">Ingresos</h2>
             <AgCharts options={ingresosChartOptions} />
           </div>
-          <div className="w-full sm:w-140">
-            <h2 className="stat-value text-secondary sm:text-left text-center">
+          <div className="w-full sm:w-140 m-3">
+            <h2 className="stat-value text-secondary  text-center">
               Gastos
             </h2>
             <AgCharts options={gastosChartOptions} />

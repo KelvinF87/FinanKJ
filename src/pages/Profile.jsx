@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext'; // Adjust the path as necessary
+import { AuthContext } from '../contexts/AuthContext'; // Adjust the path as necessary
 
 const Profile = () => {
-  const { user, setUser } = useAuth();
+  const { user, setUser } = AuthContext();
   const [photo, setPhoto] = useState(null);
   const [photoURL, setPhotoURL] = useState(user?.photoURL || '/path/to/default-profile-photo.jpg');
   const [editing, setEditing] = useState(false);

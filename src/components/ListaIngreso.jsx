@@ -1,50 +1,71 @@
-const ingresos = [
-  {
-    tipo: '↗️',
-    ingreso: 5000,
-    tipoDeIngreso: 'Salary',
-    balanceActual: 15000,
-    detalleNota: 'Monthly salary',
-  },
-  {
-    tipo: '↗️',
-    ingreso: 6000,
-    tipoDeIngreso: 'Salary',
-    balanceActual: 18000,
-    detalleNota: 'Monthly salary',
-  },
-  {
-    tipo: '↗️',
-    ingreso: 4500,
-    tipoDeIngreso: 'Commission',
-    balanceActual: 12000,
-    detalleNota: 'Monthly commission',
-  },
-  {
-    tipo: '↗️',
-    ingreso: 5500,
-    tipoDeIngreso: 'Salary',
-    balanceActual: 16000,
-    detalleNota: 'Monthly salary',
-  },
-  {
-    tipo: '↙️',
-    ingreso: 4000,
-    tipoDeIngreso: 'Salary',
-    balanceActual: 10000,
-    detalleNota: 'Monthly salary',
-  },
-  {
-    tipo: '↗️',
-    ingreso: 7000,
-    tipoDeIngreso: 'Salary',
-    balanceActual: 20000,
-    detalleNota: 'Monthly salary',
-  },
-];
-  
+// const ingresos = [
+//   {
+//     tipo: '↗️',
+//     ingreso: 5000,
+//     tipoDeIngreso: 'Salary',
+//     balanceActual: 15000,
+//     detalleNota: 'Monthly salary',
+//   },
+//   {
+//     tipo: '↗️',
+//     ingreso: 6000,
+//     tipoDeIngreso: 'Salary',
+//     balanceActual: 18000,
+//     detalleNota: 'Monthly salary',
+//   },
+//   {
+//     tipo: '↗️',
+//     ingreso: 4500,
+//     tipoDeIngreso: 'Commission',
+//     balanceActual: 12000,
+//     detalleNota: 'Monthly commission',
+//   },
+//   {
+//     tipo: '↗️',
+//     ingreso: 5500,
+//     tipoDeIngreso: 'Salary',
+//     balanceActual: 16000,
+//     detalleNota: 'Monthly salary',
+//   },
+//   {
+//     tipo: '↙️',
+//     ingreso: 4000,
+//     tipoDeIngreso: 'Salary',
+//     balanceActual: 10000,
+//     detalleNota: 'Monthly salary',
+//   },
+//   {
+//     tipo: '↗️',
+//     ingreso: 7000,
+//     tipoDeIngreso: 'Salary',
+//     balanceActual: 20000,
+//     detalleNota: 'Monthly salary',
+//   },
+// ];
 
+import axios from "axios";
+import { useEffect, useState } from "react";
+const API_URL = import.meta.env.VITE_API_URI;
 export const ListaIngreso = () => {
+  const token = localStorage.getItem("authToken");
+  const [ingresos, setIngresos] = useState([]);
+
+  const getIngresos = () => {
+    axios
+      .get(`${API_URL}/api/ingresos`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        setIngresos(response.data);
+      })
+      .catch((error) => console.log(error));
+  };
+
+  useEffect(() => {
+    getIngresos();
+  }, []);
   return (
     // <ul role="list" className="divide-y divide-gray-100">
     //   {people.map((person) => (
@@ -75,9 +96,9 @@ export const ListaIngreso = () => {
     //   ))}
     // </ul>
     <div className="overflow-x-auto w-full sm:px-8 md:px-8 lg:px-8 xl:px-8 sm:max-w-7xx sm:mx-auto">
-    <table className="table">
-    <thead>
-          <tr className="bg-gray-50 text-gray-600"> 
+      <table className="table">
+        <thead>
+          <tr className="bg-gray-50 text-gray-600">
             <th>Ingreso</th>
             <th>Tipo de Ingreso</th>
             <th>Balance Actual</th>
@@ -85,12 +106,14 @@ export const ListaIngreso = () => {
           </tr>
         </thead>
         <tbody>
-          {ingresos.map((ingreso, index) => (
-            <tr key={index}>
-              <td>{ingreso.tipo} {ingreso.ingreso}</td>
-              <td>{ingreso.tipoDeIngreso}</td>
-              <td>{ingreso.balanceActual}</td>
-              <td>{ingreso.detalleNota}</td>
+          {ingresos.map((ingreso) => (
+            <tr key={ingreso._id}>
+              <td>
+                {ingreso.tipo} {ingreso.ingreso}
+              </td>
+              <td>{ingreso.tipo.name}</td>
+              <td>{ingreso.balance}</td>
+              <td>{ingreso.detalles}</td>
             </tr>
           ))}
         </tbody>
@@ -102,8 +125,7 @@ export const ListaIngreso = () => {
             <th>Detalle/Nota</th>
           </tr>
         </tfoot>
-   
-    </table>
-  </div>
-  )
-}
+      </table>
+    </div>
+  );
+};

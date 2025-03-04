@@ -4,7 +4,7 @@ import Sidebar from "./Sidebar";
 import logo from "../assets/logo.webp";
 import { X, Home, Info, Settings, Users, CircleDollarSign, Receipt, Link } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { AuthContext } from "../contexts/AuthContext";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: <Home /> },
@@ -20,7 +20,7 @@ function classNames(...classes) {
 export default function NavBar() {
   const navegacion = useNavigate();
   const location = useLocation();
-  const { logout, login, token } = useAuth();
+  const { logout, login, token } = AuthContext;
   const navigate = useNavigate();
 
   function redireccion(uri) {

@@ -1,40 +1,62 @@
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router';
+import { useState, useContext } from "react";
+import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../contexts/AuthContext";
 
 export const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const { login } = useAuth();
-const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URI;
+  const [username, setUserName] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState(undefined);
+
+  const navigate = useNavigate();
+
+  const { storeToken, authenticateUser, isLoggedIn } = useContext(AuthContext);
+
+  const handleUserName = (e) => setUserName(e.target.value);
+  const handlePassword = (e) => setPassword(e.target.value);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (login(username, password)) {
-      // Successfully logged in
-        navigate('/');
-    } else {
-      // Handle login error
-      alert('Invalid credentials');
-    }
+    const requestBody = { username, password };
+    console.log(`${API_URL}/auth/login`, requestBody);
+    axios
+      .post(`${API_URL}/auth/login`, requestBody)
+      .then((response) => {
+        console.log("JWT token", response.data.authToken);
+        console.log(isLoggedIn);
+        storeToken(response.data.authToken);
+        authenticateUser();
+        navigate("/");
+      })
+      .catch((error) => {
+        const errorDescription = error.response.data.message;
+        setErrorMessage(errorDescription);
+      });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col items-center justify-center h-screen">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col items-center justify-center h-screen"
+    >
       <input
         type="text"
         placeholder="Username"
         value={username}
-        onChange={(e) => setUsername(e.target.value)}
+        onChange={handleUserName}
         className="input input-bordered mb-4"
       />
       <input
         type="password"
         placeholder="Password"
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={handlePassword}
         className="input input-bordered mb-4"
       />
-      <button type="submit" className="btn btn-primary">Login</button>
+      <button type="submit" className="btn btn-primary">
+        Login
+      </button>
     </form>
   );
 };
