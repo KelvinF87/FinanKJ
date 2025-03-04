@@ -1,22 +1,32 @@
-import React, { useState } from 'react';
+// IngresoModal.jsx
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogBackdrop,
   DialogPanel,
   DialogTitle,
 } from "@headlessui/react";
-import {
-  CircleDollarSign,
-  Check,
-  Ban,
-} from "lucide-react";
+import { CircleDollarSign, Check, Ban } from "lucide-react";
+import axios from "axios";
 
-export const IngresoModal = ({ open, onClose, tipo }) => {
+const API_URL = import.meta.env.VITE_API_URI;
+
+export const IngresoModal = ({ open, onClose, tipoVentana, getIngresos, setCarga, carga }) => { // Recibir getIngresos
+  const token = localStorage.getItem("authToken");
   const [formData, setFormData] = useState({
-    valor: '',
-    tipoSeleccionado: '',
-    nota: '',
+    valor: "",
+    tipo: "",
+    detalles: "",
   });
+  const [tiposEntrada, setTiposEntrada] = useState([]);
+
+  const limpiarFormulario = () => {
+    setFormData({
+      valor: "",
+      tipo: "",
+      detalles: "",
+    });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,10 +38,79 @@ export const IngresoModal = ({ open, onClose, tipo }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log('Form data submitted:', formData);
-    onClose(); // Close the modal after submission
+
+    const dataToSend = {
+      valor: parseFloat(formData.valor),
+      tipo: formData.tipo,
+      detalles: formData.detalles,
+    };
+
+    if (tipoVentana === "ingreso") {
+      addIngreso(dataToSend);
+    } else {
+      addGasto(dataToSend);
+    }
+
+    limpiarFormulario();
+    onClose();
   };
+
+  const addIngreso = (data) => {
+    axios
+      .post(`${API_URL}/api/ingresos`, { ingreso: data.valor, tipo: data.tipo, detalles: data.detalles }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Ingreso agregado:", response.data);
+        getIngresos(); // Llamar a getIngresos para recargar la tabla
+        setCarga(!carga)
+      })
+      .catch((error) => console.error("Error al agregar ingreso:", error));
+  };
+
+  const addGasto = (data) => {
+    axios
+      .post(`${API_URL}/api/gastos`, { gasto: data.valor, tipo: data.tipo, detalles: data.detalles }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Gasto agregado:", response.data);
+        getIngresos(); // Llamar a getIngresos para recargar la tabla
+        setCarga(!carga)
+      })
+      .catch((error) => console.error("Error al agregar gasto:", error));
+  };
+
+  const fetchTiposEntrada = () => {
+    axios
+      .get(`${API_URL}/api/tipo-entradas`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        // Filtrar los tipos de entrada basándose en si es ingreso o gasto
+        const filteredTipos = response.data.filter((item) => {
+          if (tipoVentana === "ingreso") {
+            return item.tipo.includes("Ingreso"); // Ajusta esto según la estructura real de tu objeto
+          } else {
+            return item.tipo.includes("Gasto"); // Ajusta esto según la estructura real de tu objeto
+          }
+        });
+        setTiposEntrada(filteredTipos);
+      })
+      .catch((error) => console.error("Error al obtener tipos de entrada:", error));
+  };
+
+  useEffect(() => {
+    if (open) {  // Solo cargar si el modal está abierto
+      fetchTiposEntrada();
+    }
+  }, [open, tipoVentana]);
 
   return (
     <Dialog onClose={onClose} open={open} className="fixed z-10 inset-0">
@@ -54,7 +133,9 @@ export const IngresoModal = ({ open, onClose, tipo }) => {
                   as="h3"
                   className="text-base font-semibold text-gray-900 py-9"
                 >
-                  {tipo === "ingreso" ? "Agregar Ingresos" : "Agregar Gastos"}
+                  {tipoVentana === "ingreso"
+                    ? "Agregar Ingresos"
+                    : "Agregar Gastos"}
                 </DialogTitle>
                 <div className="mt-3">
                   <form onSubmit={handleSubmit} className="m-auto w-90">
@@ -74,39 +155,43 @@ export const IngresoModal = ({ open, onClose, tipo }) => {
                           htmlFor="floating_ingreso"
                           className="absolute text-sm text-gray-500 duration-300 transform -translate-y-1/2 start-0 top-0/8 peer-focus:-translate-y-2/2 peer-focus:text-blue-600 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:text-base"
                         >
-                          {tipo === "ingreso" ? "Valor del ingreso" : "Valor del gasto"}
+                          {tipoVentana === "ingreso"
+                            ? "Valor del ingreso"
+                            : "Valor del gasto"}
                         </label>
                       </div>
                       <div className="relative z-0 w-full mb-5 group">
                         <select
-                          name="tipoSeleccionado"
+                          name="tipo"
                           id="floating_select"
                           className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-                          value={formData.tipoSeleccionado}
+                          value={formData.tipo}
                           onChange={handleChange}
                           required
                         >
-                          <option value="" disabled>Selecciona una opción</option>
-                          {tipo === "ingreso" ? (
-                            <option value="sueldo">Sueldo</option>
-                          ) : (
-                            <option value="agua">Agua</option>
-                          )}
+                           <option value="" disabled>Selecciona un tipo</option>
+                          {tiposEntrada.map((tipoEntrada) => (
+                            <option key={tipoEntrada._id} value={tipoEntrada._id}>
+                              {tipoEntrada.name}
+                            </option>
+                          ))}
                         </select>
                         <label
                           htmlFor="floating_select"
                           className="absolute text-sm text-gray-500 duration-300 transform -translate-y-1/2 start-0 top-0/8 peer-focus:-translate-y-2/2 peer-focus:text-blue-600 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:text-base"
                         >
-                          {tipo === "ingreso" ? " Tipo de ingreso" : " Tipo de gasto"}
+                          {tipoVentana === "ingreso"
+                            ? " Tipo de ingreso"
+                            : " Tipo de gasto"}
                         </label>
                       </div>
                       <div className="relative z-0 w-full mb-5 group">
                         <textarea
-                          name="nota"
+                          name="detalles"
                           id="floating_nota"
                           className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                           placeholder=" "
-                          value={formData.nota}
+                          value={formData.detalles}
                           onChange={handleChange}
                           required
                         />

@@ -1,17 +1,34 @@
-import { useEffect, useState, useContext } from "react";
-import { Plus, CircleDollarSign, Receipt } from "lucide-react";
+// Gastos.jsx
+import { useContext, useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import { IngresoModal } from "../components/IngresoModal";
 import { ListaGastos } from "../components/ListaGastos";
-import { CargaContext } from "../contexts/LoadContext";
-import { useNavigate } from "react-router";
 import { AuthContext } from "../contexts/AuthContext";
+import { useNavigate } from "react-router";
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URI;
 
 export const Gastos = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { isLoggedIn, logOutUser, isLoading, authenticateUser } =
-    useContext(AuthContext);
+  const [gastos, setGastos] = useState([]);
+  const { isLoggedIn, isLoading, authenticateUser } = useContext(AuthContext);
   const token = localStorage.getItem("authToken");
   const navigate = useNavigate();
+  const [carga, setCarga] = useState(false);
+
+  const getGastos = () => {
+    axios
+      .get(`${API_URL}/api/gastos`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        setGastos(response.data);
+      })
+      .catch((error) => console.error("Error fetching gastos:", error));
+  };
 
   useEffect(() => {
     const verifyAuth = async () => {
@@ -20,18 +37,35 @@ export const Gastos = () => {
         navigate("/login");
       }
     };
+
     verifyAuth();
   }, [isLoggedIn, isLoading, navigate]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      // Solo obtener los gastos si el usuario está autenticado
+      getGastos();
+    }
+  }, [isLoggedIn, carga]);  // Dependencia en 'isLoggedIn' para cargar al inicio
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
   return (
     <>
-      <IngresoModal open={isModalOpen} onClose={() => setIsModalOpen(false)} />
       {isLoggedIn && (
         <div className="mockup-window border border-base-300 w-full">
-          <ListaGastos />
+          <IngresoModal
+            open={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            tipoVentana={"gasto"}
+            getIngresos={getGastos}
+            setCarga={setCarga}
+            carga={carga}
+          />
+
+          <ListaGastos gastos={gastos} getGastos={getGastos} />
           <div className="group fixed bottom-0 right-0 p-2  flex items-end justify-end w-24 h-24 ">
             <div
               onClick={() => setIsModalOpen(true)}

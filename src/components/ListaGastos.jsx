@@ -1,73 +1,44 @@
+// ListaGastos.jsx (modificado)
+import React, { useState } from "react";
 import axios from "axios";
-import { useContext, useEffect, useState } from "react";
-import { CargaContext } from "../contexts/LoadContext";
+import ModalMensaje from "./ModalMensaje";
 
-// const gastos = [
-//   {
-//     tipo: "↙️",
-//     gasto: 1500,
-//     tipoDeGasto: "Rent",
-//     balanceActual: 13500,
-//     detalleNota: "Monthly rent payment",
-//   },
-//   {
-//     tipo: "↙️",
-//     gasto: 2000,
-//     tipoDeGasto: "Utilities",
-//     balanceActual: 11500,
-//     detalleNota: "Electricity and water bills",
-//   },
-//   {
-//     tipo: "↙️",
-//     gasto: 1200,
-//     tipoDeGasto: "Groceries",
-//     balanceActual: 10300,
-//     detalleNota: "Weekly grocery shopping",
-//   },
-//   {
-//     tipo: "↙️",
-//     gasto: 800,
-//     tipoDeGasto: "Transportation",
-//     balanceActual: 9500,
-//     detalleNota: "Monthly bus pass",
-//   },
-//   {
-//     tipo: "↙️",
-//     gasto: 500,
-//     tipoDeGasto: "Entertainment",
-//     balanceActual: 9000,
-//     detalleNota: "Movie tickets and dinner",
-//   },
-//   {
-//     tipo: "↙️",
-//     gasto: 300,
-//     tipoDeGasto: "Subscriptions",
-//     balanceActual: 8700,
-//     detalleNota: "Monthly streaming services",
-//   },
-// ];
-// /api/gastos
 const API_URL = import.meta.env.VITE_API_URI;
-export const ListaGastos = () => {
+
+const ListaGastos = ({ gastos, getGastos }) => {
   const token = localStorage.getItem("authToken");
-  const [gastos, setGastos] = useState([]);
-  const { carga, setCarga } = useContext(CargaContext);
-  const getGastos = () => {
-    axios
-      .get(`${API_URL}/api/gastos`, {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [gastoToDelete, setGastoToDelete] = useState(null);
+
+  const handleDelete = (id) => {
+    setGastoToDelete(id);
+    setIsModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    setIsModalOpen(false);
+    try {
+      await axios.delete(`${API_URL}/api/gastos/${gastoToDelete}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      })
-      .then((response) => {
-        setGastos(response.data);
-      })
-      .catch((error) => console.log(error));
+      });
+      getGastos(); // Recargar la lista después de eliminar
+    } catch (error) {
+      console.error("Error deleting gasto:", error);
+    }
+    setGastoToDelete(null);
   };
 
-  useEffect(() => {
-    getGastos();
-  }, []);
+  const cancelDelete = () => {
+    setIsModalOpen(false);
+    setGastoToDelete(null);
+  };
+
+  const handleEdit = (id) => {
+    // TODO: Implementar la lógica para editar
+    console.log(`Editing gasto with ID: ${id}`);
+  };
 
   return (
     <div className="overflow-x-auto w-full sm:px-8 md:px-8 lg:px-8 xl:px-8 sm:max-w-7xx sm:mx-auto">
@@ -78,15 +49,24 @@ export const ListaGastos = () => {
             <th>Tipo de Gasto</th>
             <th>Balance Actual</th>
             <th>Detalle/Nota</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           {gastos.map((gasto) => (
             <tr key={gasto._id}>
               <td>{gasto.gasto}</td>
-              <td>{gasto.tipo.name}</td>
+              <td>{gasto.tipo?.name || "N/A"}</td>
               <td>{gasto.balance}</td>
               <td>{gasto.detalles}</td>
+              <td>
+                <button className="btn btn-sm btn-primary" onClick={() => handleEdit(gasto._id)}>
+                  Editar
+                </button>
+                <button className="btn btn-sm btn-error" onClick={() => handleDelete(gasto._id)}>
+                  Eliminar
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -96,9 +76,18 @@ export const ListaGastos = () => {
             <th>Tipo de Gasto</th>
             <th>Balance Actual</th>
             <th>Detalle/Nota</th>
+            <th>Acciones</th>
           </tr>
         </tfoot>
       </table>
+      <ModalMensaje
+        isOpen={isModalOpen}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        mensaje="¿Estás seguro de que quieres eliminar este gasto?"
+      />
     </div>
   );
 };
+
+export { ListaGastos };

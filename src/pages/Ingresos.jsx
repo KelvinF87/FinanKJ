@@ -1,17 +1,35 @@
+// Ingresos.jsx
 import { useContext, useEffect, useState } from "react";
-import { Plus, CircleDollarSign, Receipt } from "lucide-react";
+import { Plus } from "lucide-react";
 import { IngresoModal } from "../components/IngresoModal";
 import { ListaIngreso } from "../components/ListaIngreso";
 import { AuthContext } from "../contexts/AuthContext";
 import { useNavigate } from "react-router";
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URI;
 
 export const Ingresos = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { isLoggedIn, logOutUser, isLoading, authenticateUser } =
-    useContext(AuthContext);
+  const [ingresos, setIngresos] = useState([]);
+  const { isLoggedIn, isLoading, authenticateUser } = useContext(AuthContext);
   const token = localStorage.getItem("authToken");
-  
   const navigate = useNavigate();
+  const [carga, setCarga] = useState(false);
+
+  const getIngresos = () => {
+    axios
+      .get(`${API_URL}/api/ingresos`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        setIngresos(response.data);
+      })
+      .catch((error) => console.error("Error fetching ingresos:", error));
+  };
+
   useEffect(() => {
     const verifyAuth = async () => {
       await authenticateUser();
@@ -23,9 +41,17 @@ export const Ingresos = () => {
     verifyAuth();
   }, [isLoggedIn, isLoading, navigate]);
 
+  useEffect(() => {
+    if (isLoggedIn) {
+      // Solo obtener los ingresos si el usuario está autenticado
+      getIngresos();
+    }
+  }, [isLoggedIn, carga]);  // Dependencia en 'isLoggedIn' para cargar al inicio
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
+
   return (
     <>
       {isLoggedIn && (
@@ -33,10 +59,13 @@ export const Ingresos = () => {
           <IngresoModal
             open={isModalOpen}
             onClose={() => setIsModalOpen(false)}
-            tipo={"ingreso"}
+            tipoVentana={"ingreso"}
+            getIngresos={getIngresos}
+            setCarga={setCarga}
+            carga={carga}
           />
 
-          <ListaIngreso />
+          <ListaIngreso ingresos={ingresos} getIngresos={getIngresos} />
           <div className="group fixed bottom-0 right-0 p-2  flex items-end justify-end w-24 h-24 ">
             <div
               onClick={() => setIsModalOpen(true)}
