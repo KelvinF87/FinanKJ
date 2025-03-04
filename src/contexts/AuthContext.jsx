@@ -1,32 +1,33 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext } from "react";
 
 const AuthContext = createContext();
 
-const usersData = {
-  "kelvin": {
-    "id": "1",
-    "username": "kelvin",
-    "password": "123",
-    "email": "kelvin@example.com",
-    "roles": ["user"]
+const usersData = [
+  {
+    name: "Kelvin",
+    id: "1",
+    username: "kelvin",
+    password: "123", // En un entorno real, usa hashes de contraseñas
+    email: "correo@mi.com",
+    roles: ["user", "admin"],
   },
-  "admin": {
-    "id": "2",
-    "username": "admin",
-    "password": "123",
-    "email": "admin@example.com",
-    "roles": ["admin", "user"]
-  }
-};
+  {
+    name: "Daniel",
+    id: "2",
+    username: "daniel",
+    password: "123",
+    email: "correo@mi.com",
+    roles: ["user"],
+  },
+];
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
 
-  // Load user and token from localStorage on component mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem("user");
+    const storedToken = localStorage.getItem("token");
     if (storedUser && storedToken) {
       setUser(JSON.parse(storedUser));
       setToken(storedToken);
@@ -34,14 +35,13 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (username, password) => {
-    const userData = usersData[username];
+    const userData = usersData.find(user => user.username === username);
     if (userData && userData.password === password) {
       setUser(userData);
-      setToken('123');
+      setToken("123"); // En un entorno real, genera un token dinámico
 
-      // Store user and token in localStorage
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('token', '123');
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("token", "123");
 
       return true;
     }
@@ -52,9 +52,8 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setToken(null);
 
-    // Remove user and token from localStorage
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
   };
 
   return (
