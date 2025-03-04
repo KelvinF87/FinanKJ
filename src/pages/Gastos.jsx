@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState,useContext } from "react";
 import { Plus, CircleDollarSign, Receipt } from "lucide-react";
 import { IngresoModal } from "../components/IngresoModal";
 import { ListaGastos } from "../components/ListaGastos";
-import { useAuth } from '../contexts/AuthContext';
+import { CargaContext } from '../contexts/LoadContext';
 import { useNavigate } from 'react-router';
 
 
 export const Gastos = () => {
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { logout, login,token } = useAuth();
+  const token = localStorage.getItem("authToken")
   const navigate=useNavigate();
     useEffect(() => {
       // login('admin', 'password');
