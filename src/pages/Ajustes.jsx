@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router';
 
@@ -14,17 +14,23 @@ export const Ajustes = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const { logout, login,token } = AuthContext();
+  const { isLoggedIn, logOutUser, isLoading, authenticateUser } =
+    useContext(AuthContext);
   const navigate=useNavigate();
-    useEffect(() => {
-      // login('admin', 'password');
-      console.log('User logged in', token);
-      if (!token) {
-        console.log('User not logged in');
-        navigate('/login');
-  
+  useEffect(() => {
+    const verifyAuth = async () => {
+      await authenticateUser();
+      if (!isLoggedIn && !isLoading) {
+        navigate("/login");
       }
-    }, [token]);
+    };
+
+    verifyAuth();
+  }, [isLoggedIn, isLoading, navigate]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -62,7 +68,7 @@ export const Ajustes = () => {
 
   return (
   <div className="mockup-window border border-base-300 w-full p-6">
-       {token &&  <form onSubmit={handleSubmit} className="w-md md:w-xl mx-auto space-y-4">
+       {isLoggedIn &&  <form onSubmit={handleSubmit} className="w-md md:w-xl mx-auto space-y-4">
         <div className="relative z-0 w-full mb-5 group">
           <input
             type="email"

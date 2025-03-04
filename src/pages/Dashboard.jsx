@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { AgCharts } from "ag-charts-react";
 import { AuthContext } from "../contexts/AuthContext";
 import { useNavigate } from "react-router";
@@ -31,8 +31,8 @@ const estadisticas = {
 };
 
 export const Dashboard = () => {
-  // const { logout, login, token } = AuthContext;
-  const token = localStorage.getItem("authToken")
+  const { isLoggedIn, logOutUser, isLoading, authenticateUser } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [typeChart, setTypeChart] = useState("bar");
   const [ingresosChartOptions, setIngresosChartOptions] = useState({
     data: [
@@ -59,7 +59,7 @@ export const Dashboard = () => {
     ],
     series: [{ type: typeChart.toLowerCase(), xKey: "month", yKey: "gastos" }],
   });
-  const navigate = useNavigate();
+
   useEffect(() => {
     setIngresosChartOptions((prevOptions) => ({
       ...prevOptions,
@@ -81,64 +81,72 @@ export const Dashboard = () => {
   };
 
   useEffect(() => {
-    // login('admin', 'password');
-    console.log("User logged in", token);
-    if (!token) {
-      console.log("User not logged in");
-      navigate("/login");
-    }
-  }, [token]);
+    const verifyAuth = async () => {
+      await authenticateUser();
+      if (!isLoggedIn && !isLoading) {
+        navigate("/login");
+      }
+    };
+
+    verifyAuth();
+  }, [isLoggedIn, isLoading, navigate]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
-{  token && <div className="p-9 w-full text-center">
-        {/* <button onClick={logout} className="btn btn-error mb-4">
-          Logout
-        </button> */}
-        <div className="stats shadow p-9 w-full">
-          {Object.keys(estadisticas).map((key) => (
-            <div key={key} className="stat place-items-center">
-              <div className="stat-title">{estadisticas[key].title}</div>
-              <div
-                className={`stat-value ${
-                  estadisticas[key].isSecondary ? "text-secondary" : ""
-                }`}
-              >
-                {estadisticas[key].value}
-                {monedas}
+      {isLoggedIn && (
+        <div className="p-9 w-full text-center">
+          {/* <button onClick={logOutUser} className="btn btn-error mb-4">
+            Logout
+          </button> */}
+          <div className="stats shadow p-9 w-full">
+            {Object.keys(estadisticas).map((key) => (
+              <div key={key} className="stat place-items-center">
+                <div className="stat-title">{estadisticas[key].title}</div>
+                <div
+                  className={`stat-value ${
+                    estadisticas[key].isSecondary ? "text-secondary" : ""
+                  }`}
+                >
+                  {estadisticas[key].value}
+                  {monedas}
+                </div>
+                <div
+                  className={`stat-desc ${
+                    estadisticas[key].isSecondary ? "text-secondary" : ""
+                  }`}
+                >
+                  {estadisticas[key].description}
+                </div>
               </div>
-              <div
-                className={`stat-desc ${
-                  estadisticas[key].isSecondary ? "text-secondary" : ""
-                }`}
-              >
-                {estadisticas[key].description}
-              </div>
+            ))}
+          </div>
+          <select
+            className="select select-bordered w-full sm:w-xs my-9 select-lg"
+            value={typeChart}
+            onChange={controlType}
+          >
+            <option disabled>Tipo de Gráficos</option>
+            <option value="bar">Bar</option>
+            <option value="line">Line</option>
+          </select>
+          <div className="bg-auto flex flex-row justify-center items-center flex-wrap gap-6 sm:gap-0">
+            <div className="w-full sm:w-140 m-3">
+              <h2 className="stat-value  text-center">Ingresos</h2>
+              <AgCharts options={ingresosChartOptions} />
             </div>
-          ))}
-        </div>
-        <select
-          className="select select-bordered w-full sm:w-xs my-9 select-lg"
-          value={typeChart}
-          onChange={controlType}
-        >
-          <option disabled>Tipo de Gráficos</option>
-          <option value="bar">Bar</option>
-          <option value="line">Line</option>
-        </select>
-        <div className="bg-auto flex flex-row justify-center items-center flex-wrap gap-6 sm:gap-0">
-          <div className="w-full sm:w-140 m-3">
-            <h2 className="stat-value  text-center">Ingresos</h2>
-            <AgCharts options={ingresosChartOptions} />
-          </div>
-          <div className="w-full sm:w-140 m-3">
-            <h2 className="stat-value text-secondary  text-center">
-              Gastos
-            </h2>
-            <AgCharts options={gastosChartOptions} />
+            <div className="w-full sm:w-140 m-3">
+              <h2 className="stat-value text-secondary  text-center">
+                Gastos
+              </h2>
+              <AgCharts options={gastosChartOptions} />
+            </div>
           </div>
         </div>
-      </div>}
+      )}
     </>
   );
 };

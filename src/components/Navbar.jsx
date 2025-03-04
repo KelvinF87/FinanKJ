@@ -5,6 +5,7 @@ import logo from "../assets/logo.webp";
 import { X, Home, Info, Settings, Users, CircleDollarSign, Receipt, Link } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext";
+import { useContext, useEffect } from "react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: <Home /> },
@@ -20,8 +21,25 @@ function classNames(...classes) {
 export default function NavBar() {
   const navegacion = useNavigate();
   const location = useLocation();
-  const { logout, login, token } = AuthContext;
+  const { isLoggedIn, logOutUser, isLoading, authenticateUser } =
+    useContext(AuthContext);
+  const token = localStorage.getItem("authToken");
+  
   const navigate = useNavigate();
+  useEffect(() => {
+    const verifyAuth = async () => {
+      await authenticateUser();
+      if (!isLoggedIn && !isLoading) {
+        navigate("/login");
+      }
+    };
+
+    verifyAuth();
+  }, [isLoggedIn, isLoading, navigate]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   function redireccion(uri) {
     navegacion(uri);
@@ -107,7 +125,7 @@ export default function NavBar() {
                 </MenuItem>
                 <MenuItem>
                   <a
-                  onClick={() => logout()}
+                  onClick={()=>logOutUser()}
                   
                     className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                   >

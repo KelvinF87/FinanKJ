@@ -8,40 +8,24 @@ import { Ingresos } from "./pages/Ingresos";
 import { Gastos } from "./pages/Gastos";
 import { Ajustes } from "./pages/Ajustes";
 import Profile from "./pages/Profile";
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import axios from "axios";
 
-
 function App() {
-const API_URL = import.meta.env.VITE_API_URI;
-const token = localStorage.getItem("authToken")
-useEffect(() => {
-  // axios
-  //   .get(`${API_URL}/api/students?$`, {
-  //     headers: {
-  //       Authorization: `Bearer ${token}`,
-  //     },
-  //   })
-  //   .then((response) => {
-  //     setStudents(response.data)})
-  //   .catch((error) => console.log(error));
-}, []);
+  const API_URL = import.meta.env.VITE_API_URI;
+  const token = localStorage.getItem("authToken");
+  const { isLoggedIn, isLoading, user } = useContext(AuthContext);
+
   return (
     <>
-      <NavBar />
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={token ? <Navigate to="/" /> : <Login />} />
-
-        {/* Protected Routes */}
-        <Route path="/" element={token ? <Dashboard /> : <Navigate to="/login" />} />
-        <Route path="/ingreso" element={token ? <Ingresos /> : <Navigate to="/login" />} />
-        <Route path="/gastos" element={token ? <Gastos /> : <Navigate to="/login" />} />
-        <Route path="/config" element={token ? <Ajustes /> : <Navigate to="/login" />} />
-        <Route path="/profile" element={token ? <Profile /> : <Navigate to="/login" />} />
-
-
-        {/* Not Found Route */}
+       {location.pathname !== '/login' && <NavBar />}
+      <Routes>  
+        <Route path="/login"  element= {<Login />} />    
+        <Route path="/" element={ <Dashboard />} />
+        <Route path="/ingreso" element={<Ingresos /> }/>
+        <Route path="/gastos" element={<Gastos /> }  />
+        <Route path="/config" element={<Ajustes />}/>
+        <Route path="/profile" element={<Profile /> }  />
         <Route path="*" element={<h1>Not Found</h1>} />
       </Routes>
     </>

@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext";
@@ -10,11 +10,21 @@ export const Login = () => {
   const [errorMessage, setErrorMessage] = useState(undefined);
 
   const navigate = useNavigate();
-
-  const { storeToken, authenticateUser, isLoggedIn } = useContext(AuthContext);
-
+  const { storeToken, authenticateUser, isLoggedIn,logOutUser } = useContext(AuthContext);
+  
   const handleUserName = (e) => setUserName(e.target.value);
   const handlePassword = (e) => setPassword(e.target.value);
+  useEffect(() => {
+    const verifyAuth = async () => {
+      await authenticateUser();
+      if (isLoggedIn) {
+        navigate("/");
+      }
+    };
+
+    verifyAuth();
+  }, [isLoggedIn, navigate]);
+  // if(localStorage.getItem("authToken")){console.log("logged in")}
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -23,8 +33,8 @@ export const Login = () => {
     axios
       .post(`${API_URL}/auth/login`, requestBody)
       .then((response) => {
-        console.log("JWT token", response.data.authToken);
-        console.log(isLoggedIn);
+        // console.log("JWT token", response.data.authToken);
+        // console.log(isLoggedIn);
         storeToken(response.data.authToken);
         authenticateUser();
         navigate("/");
