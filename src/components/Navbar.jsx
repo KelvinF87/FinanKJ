@@ -1,6 +1,6 @@
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import Sidebar from "./Sidebar";
+import Sidebar from "./SIdebar";
 import logo from "../assets/logo.webp";
 import { X, Home, Info, Settings, Users, CircleDollarSign, Receipt, Link } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
