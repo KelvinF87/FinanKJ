@@ -1,72 +1,90 @@
 import React, { useContext, useEffect, useState } from "react";
-import { AuthContext } from "../contexts/AuthContext"; // Adjust the path as necessary
+import { AuthContext } from "../contexts/AuthContext";
 import { useNavigate } from "react-router";
+import axios from "axios";
 
 const Profile = () => {
-  const { isLoggedIn, logOutUser, isLoading, authenticateUser, user } =
+  const { isLoggedIn, logOutUser, isLoading, authenticateUser, user, setUser } =
     useContext(AuthContext);
-  const [photo, setPhoto] = useState(null);
-  const [photoURL, setPhotoURL] = useState(
-    user?.photoURL || "/path/to/default-profile-photo.jpg"
-  );
+  const API_URL = import.meta.env.VITE_API_URI;
+  const [photoURL, setPhotoURL] = useState("");
   const [editing, setEditing] = useState(false);
-  const [newUsername, setNewUsername] = useState(user?.username || "");
+  const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
-
-  const token = localStorage.getItem("authToken");
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   const navigate = useNavigate();
+
   useEffect(() => {
-    const verifyAuth = async () => {
+    const verifyAuthAndFetchUser = async () => {
       await authenticateUser();
+
       if (!isLoggedIn && !isLoading) {
         navigate("/login");
+        return;
+      }
+
+      if (user) {
+        setPhotoURL(user.image);
+        setNewUsername(user.username || "");
       }
     };
 
-    verifyAuth();
+    verifyAuthAndFetchUser();
   }, [isLoggedIn, isLoading, navigate]);
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-  if (!user) {
-    return <div>Loading...</div>;
-  }
+  const updateUser = async () => {
+    setError(null);
+    setSuccessMessage(null);
 
-  const handlePhotoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPhoto(file);
-      setPhotoURL(URL.createObjectURL(file));
-    }
-  };
+    try {
+      const token = localStorage.getItem("authToken");
+      const userId = user._id;
 
-  const handlePhotoUpload = () => {
-    if (photo) {
-      setUser({ ...user, photoURL });
-      alert("Photo uploaded successfully!");
-    }
-  };
+      const updateData = {};
+      if (newUsername.trim()) {
+        updateData.username = newUsername;
+      }
+      if (newPassword.trim()) {
+        updateData.password = newPassword;
+      }
+      if (photoURL && photoURL !== user.image) {
+        updateData.image = photoURL;
+      }
 
-  const handleSaveChanges = () => {
-    if (newUsername.trim() && newPassword.trim()) {
-      setUser({
-        ...user,
-        username: newUsername,
-        password: newPassword,
-        photoURL,
-      });
-      alert("Changes saved successfully!");
+      const response = await axios.put(
+        `${API_URL}/api/users/${userId}`,
+        updateData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setUser({ ...user, ...response.data });
+
+      setSuccessMessage("Profile updated successfully!");
       setEditing(false);
-    } else {
-      alert("Please fill in all fields.");
+    } catch (err) {
+      console.error("Error updating user:", err);
+      setError(
+        err.response?.data?.message ||
+          "Failed to update profile. Please try again."
+      );
     }
   };
-  useEffect(() => {
-    console.log("User data:", user);
-  }, [user]);
-  
+
+  const handleSaveChanges = async () => {
+    if (newUsername.trim() || newPassword.trim() || photoURL) {
+      await updateUser();
+    } else {
+      setError("Please modify at least one field to save changes.");
+    }
+  };
+
+  if (isLoading || !user) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
@@ -75,13 +93,21 @@ const Profile = () => {
           <div className="flex flex-col m-auto sm:w-300 sm:p-8 sm:items-center justify-center bg-white border border-gray-200 rounded-lg shadow-sm md:flex-row md:max-w-xl hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
             <img
               className="object-cover w-full rounded-t-lg h-96 md:h-auto md:w-48 md:rounded-none md:rounded-s-lg"
-              src={photoURL}
+              src={
+                photoURL
+                  ? photoURL
+                  : "https://static-00.iconduck.com/assets.00/avatar-icon-512x512-gu21ei4u.png"
+              }
               alt="Profile"
             />
             <div className="flex flex-col justify-between p-4 leading-normal w-full">
               <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                 {editing ? "Edit Profile" : `${user.username}'s Profile`}
               </h5>
+              {error && <p className="text-red-500">{error}</p>}
+              {successMessage && (
+                <p className="text-green-500">{successMessage}</p>
+              )}
               {editing ? (
                 <>
                   <input
@@ -99,16 +125,24 @@ const Profile = () => {
                     placeholder="New Password"
                   />
                   <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    className="file-input file-input-bordered w-full max-w-xs mb-4"
+                    type="url"
+                    value={photoURL}
+                    onChange={(e) => setPhotoURL(e.target.value)}
+                    className="input input-bordered mb-4 w-full"
+                    placeholder="Profile Photo URL"
                   />
+
                   <button
                     onClick={handleSaveChanges}
                     className="btn btn-primary"
                   >
                     Save Changes
+                  </button>
+                  <button
+                    onClick={() => setEditing(false)}
+                    className="btn btn-ghost"
+                  >
+                    Cancel
                   </button>
                 </>
               ) : (
@@ -125,14 +159,7 @@ const Profile = () => {
                   <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
                     <strong>Roles:</strong> {user.roles.join(", ")}
                   </p>
-                  {/* <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
-                    <strong>Created At:</strong>{" "}
-                    {new Date(user.createdAt).toLocaleString()}
-                  </p>
-                  <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
-                    <strong>Last Login:</strong>{" "}
-                    {new Date(user.lastLogin).toLocaleString()}
-                  </p> */}
+
                   <button
                     onClick={() => setEditing(true)}
                     className="btn btn-secondary"

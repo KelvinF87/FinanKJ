@@ -115,8 +115,8 @@ export const Dashboard = () => {
       const startDateFormatted = formatDateForBackend(dateRange.startDate);
       const endDateFormatted = formatDateForBackend(dateRange.endDate);
 
-      console.log("startDateFormatted:", startDateFormatted); // ***AGREGADO***
-      console.log("endDateFormatted:", endDateFormatted); // ***AGREGADO***
+      // console.log("startDateFormatted:", startDateFormatted); // ***AGREGADO***
+      // console.log("endDateFormatted:", endDateFormatted); // ***AGREGADO***
 
       // Fetch balance
       const allinfoResponse = await axios.get(

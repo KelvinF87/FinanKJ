@@ -87,7 +87,7 @@ export const AuthForm = () => {
       try {
         const response = await axios.post(`${API_URL}/auth/signup`, signupData);
         setSuccessMessage("Usuario creado exitosamente. Por favor, inicia sesión.");
-        navigate("/login"); // Redirige al login después del registro
+        navigate("/"); // Redirige al login después del registro
         clearForm(); // Clear the form
       } catch (error) {
         console.error("Error al registrar usuario:", error);
