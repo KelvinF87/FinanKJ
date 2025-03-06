@@ -2,13 +2,16 @@
 import React, { useState } from "react";
 import axios from "axios";
 import ModalMensaje from "./ModalMensaje";
+import { EditModal } from "./EditarModal"; // Importa el componente EditModal
 
 const API_URL = import.meta.env.VITE_API_URI;
 
-const ListaIngreso = ({ ingresos, getIngresos }) => {
+const ListaIngreso = ({ ingresos, getIngresos, setCarga, carga }) => {
   const token = localStorage.getItem("authToken");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [ingresoToDelete, setIngresoToDelete] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Estado para controlar la visibilidad del modal de edición
+  const [ingresoToEdit, setIngresoToEdit] = useState(null); // Estado para guardar el ingreso a editar
 
   const handleDelete = (id) => {
     setIngresoToDelete(id);
@@ -35,9 +38,15 @@ const ListaIngreso = ({ ingresos, getIngresos }) => {
     setIngresoToDelete(null);
   };
 
-  const handleEdit = (id) => {
-    // TODO: Implementar la lógica para editar
-    console.log(`Editing ingreso with ID: ${id}`);
+  // Función para abrir el modal de edición y establecer el ingreso a editar
+  const handleEdit = (ingreso) => {
+    setIngresoToEdit(ingreso);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setIngresoToEdit(null);
   };
 
   return (
@@ -60,10 +69,16 @@ const ListaIngreso = ({ ingresos, getIngresos }) => {
               <td>{ingreso.balance}</td>
               <td>{ingreso.detalles}</td>
               <td>
-                <button className="btn btn-sm btn-primary" onClick={() => handleEdit(ingreso._id)}>
+                <button
+                  className="btn btn-sm btn-primary"
+                  onClick={() => handleEdit(ingreso)} // Pasar el objeto ingreso a handleEdit
+                >
                   Editar
                 </button>
-                <button className="btn btn-sm btn-error" onClick={() => handleDelete(ingreso._id)}>
+                <button
+                  className="btn btn-sm btn-error"
+                  onClick={() => handleDelete(ingreso._id)}
+                >
                   Eliminar
                 </button>
               </td>
@@ -85,6 +100,16 @@ const ListaIngreso = ({ ingresos, getIngresos }) => {
         onClose={cancelDelete}
         onConfirm={confirmDelete}
         mensaje="¿Estás seguro de que quieres eliminar este ingreso?"
+      />
+      {/* Renderiza condicionalmente el componente EditModal */}
+      <EditModal
+        open={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        tipoVentana="ingreso"
+        getIngresos={getIngresos}
+        setCarga={setCarga}
+        carga={carga}
+        itemToEdit={ingresoToEdit}
       />
     </div>
   );

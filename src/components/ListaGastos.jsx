@@ -1,14 +1,16 @@
-// ListaGastos.jsx (modificado)
 import React, { useState } from "react";
 import axios from "axios";
 import ModalMensaje from "./ModalMensaje";
+import { EditModal } from "./EditarModal"; // Importa el componente EditModal
 
 const API_URL = import.meta.env.VITE_API_URI;
 
-const ListaGastos = ({ gastos, getGastos }) => {
+const ListaGastos = ({ gastos, getGastos, setCarga, carga }) => {
   const token = localStorage.getItem("authToken");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [gastoToDelete, setGastoToDelete] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Estado para controlar la visibilidad del modal de edición
+  const [gastoToEdit, setGastoToEdit] = useState(null); // Estado para guardar el gasto a editar
 
   const handleDelete = (id) => {
     setGastoToDelete(id);
@@ -24,6 +26,7 @@ const ListaGastos = ({ gastos, getGastos }) => {
         },
       });
       getGastos(); // Recargar la lista después de eliminar
+      setCarga(prev => !prev)
     } catch (error) {
       console.error("Error deleting gasto:", error);
     }
@@ -35,9 +38,15 @@ const ListaGastos = ({ gastos, getGastos }) => {
     setGastoToDelete(null);
   };
 
-  const handleEdit = (id) => {
-    // TODO: Implementar la lógica para editar
-    console.log(`Editing gasto with ID: ${id}`);
+  // Función para abrir el modal de edición y establecer el gasto a editar
+  const handleEdit = (gasto) => {
+    setGastoToEdit(gasto);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setGastoToEdit(null);
   };
 
   return (
@@ -60,10 +69,16 @@ const ListaGastos = ({ gastos, getGastos }) => {
               <td>{gasto.balance}</td>
               <td>{gasto.detalles}</td>
               <td>
-                <button className="btn btn-sm btn-primary" onClick={() => handleEdit(gasto._id)}>
+                <button
+                  className="btn btn-sm btn-primary"
+                  onClick={() => handleEdit(gasto)} // Pasar el objeto gasto a handleEdit
+                >
                   Editar
                 </button>
-                <button className="btn btn-sm btn-error" onClick={() => handleDelete(gasto._id)}>
+                <button
+                  className="btn btn-sm btn-error"
+                  onClick={() => handleDelete(gasto._id)}
+                >
                   Eliminar
                 </button>
               </td>
@@ -85,6 +100,16 @@ const ListaGastos = ({ gastos, getGastos }) => {
         onClose={cancelDelete}
         onConfirm={confirmDelete}
         mensaje="¿Estás seguro de que quieres eliminar este gasto?"
+      />
+      {/* Renderiza condicionalmente el componente EditModal */}
+      <EditModal
+        open={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        tipoVentana="gasto"
+        getGastos={getGastos}
+        setCarga={setCarga}
+        carga={carga}
+        itemToEdit={gastoToEdit}
       />
     </div>
   );

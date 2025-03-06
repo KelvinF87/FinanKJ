@@ -1,4 +1,3 @@
-// Ingresos.jsx
 import { useContext, useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { IngresoModal } from "../components/IngresoModal";
@@ -65,7 +64,7 @@ export const Ingresos = () => {
             carga={carga}
           />
 
-          <ListaIngreso ingresos={ingresos} getIngresos={getIngresos} />
+          <ListaIngreso ingresos={ingresos} getIngresos={getIngresos} setCarga={setCarga} carga={carga}/>
           <div className="group fixed bottom-0 right-0 p-2  flex items-end justify-end w-24 h-24 ">
             <div
               onClick={() => setIsModalOpen(true)}

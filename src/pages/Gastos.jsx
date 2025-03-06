@@ -46,7 +46,7 @@ export const Gastos = () => {
       // Solo obtener los gastos si el usuario está autenticado
       getGastos();
     }
-  }, [isLoggedIn, carga]);  // Dependencia en 'isLoggedIn' para cargar al inicio
+  }, [isLoggedIn, carga]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -65,7 +65,7 @@ export const Gastos = () => {
             carga={carga}
           />
 
-          <ListaGastos gastos={gastos} getGastos={getGastos} />
+          <ListaGastos gastos={gastos} getGastos={getGastos} setCarga={setCarga} carga={carga}/>
           <div className="group fixed bottom-0 right-0 p-2  flex items-end justify-end w-24 h-24 ">
             <div
               onClick={() => setIsModalOpen(true)}

@@ -1,4 +1,4 @@
-// IngresoModal.jsx
+// EditModal.jsx
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
@@ -11,7 +11,16 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URI;
 
-export const IngresoModal = ({ open, onClose, tipoVentana, getIngresos, setCarga, carga }) => { // Recibir getIngresos
+export const EditModal = ({
+  open,
+  onClose,
+  tipoVentana,
+  getIngresos,
+  getGastos,
+  setCarga,
+  carga,
+  itemToEdit, // El objeto a editar (ingreso o gasto)
+}) => {
   const token = localStorage.getItem("authToken");
   const [formData, setFormData] = useState({
     valor: "",
@@ -20,13 +29,16 @@ export const IngresoModal = ({ open, onClose, tipoVentana, getIngresos, setCarga
   });
   const [tiposEntrada, setTiposEntrada] = useState([]);
 
-  const limpiarFormulario = () => {
-    setFormData({
-      valor: "",
-      tipo: "",
-      detalles: "",
-    });
-  };
+  // UseEffect para poblar el formulario con los datos del elemento a editar
+  useEffect(() => {
+    if (itemToEdit) {
+      setFormData({
+        valor: itemToEdit.ingreso || itemToEdit.gasto || "", // Usar ingreso para Ingresos, gasto para Gastos
+        tipo: itemToEdit.tipo?._id || "", // Usar el ID del tipo si existe
+        detalles: itemToEdit.detalles || "",
+      });
+    }
+  }, [itemToEdit]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -46,43 +58,51 @@ export const IngresoModal = ({ open, onClose, tipoVentana, getIngresos, setCarga
     };
 
     if (tipoVentana === "ingreso") {
-      addIngreso(dataToSend);
+      updateIngreso(itemToEdit._id, dataToSend);
     } else {
-      addGasto(dataToSend);
+      updateGasto(itemToEdit._id, dataToSend);
     }
 
-    limpiarFormulario();
     onClose();
   };
 
-  const addIngreso = (data) => {
+  // Funciones para actualizar ingresos y gastos
+  const updateIngreso = (id, data) => {
     axios
-      .post(`${API_URL}/api/ingresos`, { ingreso: data.valor, tipo: data.tipo, detalles: data.detalles }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      .put(
+        `${API_URL}/api/ingresos/${id}`,
+        { ingreso: data.valor, tipo: data.tipo, detalles: data.detalles },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       .then((response) => {
-        console.log("Ingreso agregado:", response.data);
-        getIngresos(); // Llamar a getIngresos para recargar la tabla
-        setCarga(!carga)
+        // console.log("Ingreso actualizado:", response.data);
+        getIngresos();
+        setCarga(!carga);
       })
-      .catch((error) => console.error("Error al agregar ingreso:", error));
+      .catch((error) => console.error("Error al actualizar ingreso:", error));
   };
 
-  const addGasto = (data) => {
+  const updateGasto = (id, data) => {
     axios
-      .post(`${API_URL}/api/gastos`, { gasto: data.valor, tipo: data.tipo, detalles: data.detalles }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      .put(
+        `${API_URL}/api/gastos/${id}`,
+        { gasto: data.valor, tipo: data.tipo, detalles: data.detalles },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       .then((response) => {
-        console.log("Gasto agregado:", response.data);
-        getIngresos(); // Llamar a getIngresos para recargar la tabla
-        setCarga(!carga)
+        // console.log("Gasto actualizado:", response.data);
+        getGastos();
+        setCarga(!carga);
       })
-      .catch((error) => console.error("Error al agregar gasto:", error));
+      .catch((error) => console.error("Error al actualizar gasto:", error));
   };
 
   const fetchTiposEntrada = () => {
@@ -103,11 +123,14 @@ export const IngresoModal = ({ open, onClose, tipoVentana, getIngresos, setCarga
         });
         setTiposEntrada(filteredTipos);
       })
-      .catch((error) => console.error("Error al obtener tipos de entrada:", error));
+      .catch((error) =>
+        console.error("Error al obtener tipos de entrada:", error)
+      );
   };
 
   useEffect(() => {
-    if (open) {  // Solo cargar si el modal está abierto
+    if (open) {
+      // Solo cargar si el modal está abierto
       fetchTiposEntrada();
     }
   }, [open, tipoVentana]);
@@ -134,8 +157,8 @@ export const IngresoModal = ({ open, onClose, tipoVentana, getIngresos, setCarga
                   className="text-base font-semibold text-gray-900 py-9"
                 >
                   {tipoVentana === "ingreso"
-                    ? "Agregar Ingresos"
-                    : "Agregar Gastos"}
+                    ? "Editar Ingreso"
+                    : "Editar Gasto"}
                 </DialogTitle>
                 <div className="mt-3">
                   <form onSubmit={handleSubmit} className="m-auto w-90">
@@ -169,9 +192,14 @@ export const IngresoModal = ({ open, onClose, tipoVentana, getIngresos, setCarga
                           onChange={handleChange}
                           required
                         >
-                           <option value="" disabled>Selecciona un tipo</option>
+                          <option value="" disabled>
+                            Selecciona un tipo
+                          </option>
                           {tiposEntrada.map((tipoEntrada) => (
-                            <option key={tipoEntrada._id} value={tipoEntrada._id}>
+                            <option
+                              key={tipoEntrada._id}
+                              value={tipoEntrada._id}
+                            >
                               {tipoEntrada.name}
                             </option>
                           ))}

@@ -132,20 +132,29 @@ export const Dashboard = () => {
       );
       const { balance, expenses, incomes } = allinfoResponse.data;
 
-      // ... (resto del código)            const { balance, expenses, incomes } = allinfoResponse.data;
-
       // Process expenses data for chart
-      const processedExpensesData = expenses.map((item) => ({
-        month: formatDate(item._id),
-        gastos: item.total,
-      }));
-
-      // Process income data for chart
-      const processedIncomeData = incomes.map((item) => ({
-        month: formatDate(item._id),
-        ingresos: item.total,
-      }));
-
+          const processedExpensesData = Array.isArray(expenses)
+          ? expenses.map((item) =>
+              item._id
+                ? {
+                    month: formatDate(item._id),
+                    gastos: item.total,
+                  }
+                : null // Handle cases where item._id is undefined
+            ).filter(Boolean) // Filter out null values
+          : []; // Use an empty array if expenses is undefined
+  
+        // Process income data for chart
+        const processedIncomeData = Array.isArray(incomes)
+          ? incomes.map((item) =>
+              item._id
+                ? {
+                    month: formatDate(item._id),
+                    ingresos: item.total,
+                  }
+                : null // Handle cases where item._id is undefined
+            ).filter(Boolean) // Filter out null values
+          : []; // Use an empty array if incomes is undefined
       // Update chart options
       setGastosChartOptions((prevOptions) => ({
         ...prevOptions,
@@ -162,14 +171,14 @@ export const Dashboard = () => {
         ...prevEstadisticas,
         ingresos: {
           ...prevEstadisticas.ingresos,
-          value: incomes.reduce((acc, curr) => acc + curr.total, 0),
+          value: Array.isArray(incomes) ? incomes.reduce((acc, curr) => acc + curr.total, 0) : 0,
           description: `From ${formatDate(startDateFormatted)} to ${formatDate(
             endDateFormatted
           )}`,
         },
         gastos: {
           ...prevEstadisticas.gastos,
-          value: expenses.reduce((acc, curr) => acc + curr.total, 0),
+          value: Array.isArray(expenses) ? expenses.reduce((acc, curr) => acc + curr.total, 0) : 0,
           description: `From ${formatDate(startDateFormatted)} to ${formatDate(
             endDateFormatted
           )}`,

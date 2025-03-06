@@ -63,7 +63,7 @@ export const IngresoModal = ({ open, onClose, tipoVentana, getIngresos, setCarga
         },
       })
       .then((response) => {
-        console.log("Ingreso agregado:", response.data);
+        // console.log("Ingreso agregado:", response.data);
         getIngresos(); // Llamar a getIngresos para recargar la tabla
         setCarga(!carga)
       })
@@ -78,7 +78,7 @@ export const IngresoModal = ({ open, onClose, tipoVentana, getIngresos, setCarga
         },
       })
       .then((response) => {
-        console.log("Gasto agregado:", response.data);
+        // console.log("Gasto agregado:", response.data);
         getIngresos(); // Llamar a getIngresos para recargar la tabla
         setCarga(!carga)
       })
