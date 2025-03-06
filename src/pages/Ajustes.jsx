@@ -1,13 +1,15 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router';
-import axios from 'axios';  // Import axios for API calls
+import axios from 'axios';
 import { toast } from 'react-toastify';
+import CreateTipoEntradaModal from "../components/CreateTipoEntradaModal";
+import { Plus, X } from "lucide-react";  // Import the Plus and X icons from lucide-react
 
 const API_URL = import.meta.env.VITE_API_URI;
 
 export const Ajustes = () => {
-  const storedToken = localStorage.getItem("authToken");
+    const storedToken = localStorage.getItem("authToken");
     const [usuario, setUsuario] = useState({
         email: '',
         password: '',
@@ -17,11 +19,15 @@ export const Ajustes = () => {
         phone: '',
     });
     const [allUsers, setAllUsers] = useState([]);
+    const [tiposEntrada, setTiposEntrada] = useState([]); // State for entry types
     const [errors, setErrors] = useState({});
     const { isLoggedIn, logOutUser, isLoading, authenticateUser, user } = useContext(AuthContext);
     const navigate = useNavigate();
     const isAdmin = user?.roles?.includes('admin');
     const [loadingUsers, setLoadingUsers] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [loadingTiposEntrada, setLoadingTiposEntrada] = useState(false);
+
     useEffect(() => {
         const verifyAuth = async () => {
             await authenticateUser();
@@ -34,28 +40,48 @@ export const Ajustes = () => {
     }, [isLoggedIn, isLoading, navigate]);
 
     useEffect(() => {
-      const fetchUsers = async () => {
-          if (isAdmin && isLoggedIn) {
-              setLoadingUsers(true);
-              try {
-                  const response = await axios.get(`${API_URL}/api/users`, {
-                      headers: { Authorization: `Bearer ${storedToken}` },
-                  });
-  
-                  setAllUsers(response.data);
-              } catch (error) {
-                  console.error("Error fetching users:", error);
-                  toast.error("Failed to fetch users.");
-              } finally {
-                  setLoadingUsers(false);
-              }
-          }
-      };
-  
-      fetchUsers();
-  }, [isAdmin, isLoggedIn, storedToken, API_URL, user]);  // VERY IMPORTANT
+        const fetchUsers = async () => {
+            if (isAdmin && isLoggedIn) {
+                setLoadingUsers(true);
+                try {
+                    const response = await axios.get(`${API_URL}/api/users`, {
+                        headers: { Authorization: `Bearer ${storedToken}` },
+                    });
 
-  
+                    setAllUsers(response.data);
+                } catch (error) {
+                    console.error("Error fetching users:", error);
+                    toast.error("No se pudieron cargar los usuarios.");
+                } finally {
+                    setLoadingUsers(false);
+                }
+            }
+        };
+
+        fetchUsers();
+    }, [isAdmin, isLoggedIn, storedToken, API_URL, user]);
+
+    useEffect(() => {
+        const fetchTiposEntrada = async () => {
+            setLoadingTiposEntrada(true);
+            try {
+                const response = await axios.get(`${API_URL}/api/tipo-entradas`, {
+                    headers: { Authorization: `Bearer ${storedToken}` },
+                });
+                setTiposEntrada(response.data);
+            } catch (error) {
+                console.error("Error fetching entry types:", error);
+                toast.error("No se pudieron cargar los tipos de entrada.");
+            } finally {
+                setLoadingTiposEntrada(false);
+            }
+        };
+
+        if (isAdmin && isLoggedIn) {
+            fetchTiposEntrada();
+        }
+    }, [isAdmin, isLoggedIn, storedToken, API_URL]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setUsuario((prevUsuario) => ({
@@ -63,37 +89,59 @@ export const Ajustes = () => {
             [name]: value,
         }));
     };
+
     const handleDeactivateUser = async (userId) => {
-      try {
-          const storedToken = localStorage.getItem("authToken");
-          await axios.put(
-              `${API_URL}/api/users/${userId}`,
-              { active: false },  // Assuming the API expects an 'active' field to be toggled
-              { headers: { Authorization: `Bearer ${storedToken}` } }
-          );
-          setAllUsers(prevUsers => prevUsers.map(u => u._id === userId ? { ...u, active: false } : u));  // Optimistic update
+        try {
+            const storedToken = localStorage.getItem("authToken");
+            await axios.put(
+                `${API_URL}/api/users/${userId}`,
+                { active: false },
+                { headers: { Authorization: `Bearer ${storedToken}` } }
+            );
+            setAllUsers(prevUsers => prevUsers.map(u => u._id === userId ? { ...u, active: false } : u));
 
-          toast.success("User deactivated successfully.");
-      } catch (error) {
-          console.error("Error deactivating user:", error);
-          toast.error("Failed to deactivate user.");
-      }
-  };
+            toast.success("Usuario desactivado con éxito.");
+        } catch (error) {
+            console.error("Error al desactivar el usuario:", error);
+            toast.error("No se pudo desactivar el usuario.");
+        }
+    };
 
-  const handleResetPassword = async (userId) => {
-      try {
-          const storedToken = localStorage.getItem("authToken");
-          await axios.post(
-              `${API_URL}/api/users/reset-password/${userId}`, // Ensure this endpoint exists on your backend
-              {}, // Typically the backend will generate the random password
-              { headers: { Authorization: `Bearer ${storedToken}` } }
-          );
-          toast.success("Password reset successfully. The user should receive an email.");
-      } catch (error) {
-          console.error("Error resetting password:", error);
-          toast.error("Failed to reset password.");
-      }
-  };
+    const handleResetPassword = async (userId) => {
+        try {
+            const storedToken = localStorage.getItem("authToken");
+            await axios.post(
+                `${API_URL}/api/users/reset-password/${userId}`,
+                {},
+                { headers: { Authorization: `Bearer ${storedToken}` } }
+            );
+            toast.success("Contraseña restablecida con éxito. Se ha enviado un correo electrónico al usuario.");
+        } catch (error) {
+            console.error("Error al restablecer la contraseña:", error);
+            toast.error("No se pudo restablecer la contraseña.");
+        }
+    };
+
+    const handleToggleRole = async (userId, newRoles) => {
+        try {
+            await axios.put(`${API_URL}/api/users/${userId}`, { roles: newRoles }, {
+                headers: { Authorization: `Bearer ${storedToken}` }
+            });
+
+            setAllUsers(prevUsers => prevUsers.map(user =>
+                user._id === userId ? { ...user, roles: newRoles } : user
+            ));
+
+            toast.success("Rol de usuario actualizado con éxito.");
+        } catch (error) {
+            console.error("Error al actualizar el rol de usuario:", error);
+            toast.error("No se pudo actualizar el rol de usuario.");
+        }
+    };
+    const handleEntryCreated = (newEntry) => {
+        setTiposEntrada(prevEntries => [...prevEntries, newEntry]);
+    };
+
     const validate = () => {
         const newErrors = {};
         if (!usuario.email) newErrors.email = 'Email is required';
@@ -110,180 +158,47 @@ export const Ajustes = () => {
     };
 
     const handleSubmit = async (e) => {
-      e.preventDefault();
-      if (validate()) {
-          try {
-              const response = await axios.post(`${API_URL}/api/some-endpoint`, usuario, {
-                  headers: { Authorization: `Bearer ${storedToken}` }
-              });
-              toast.success("User updated successfully!");
-              // Optionally, clear the form or redirect
-          } catch (error) {
-              console.error("Error updating user:", error);
-              toast.error("Failed to update user.");
-          }
-      }
-  };
+        e.preventDefault();
+        if (validate()) {
+            try {
+                const response = await axios.post(`${API_URL}/api/some-endpoint`, usuario, {
+                    headers: { Authorization: `Bearer ${storedToken}` }
+                });
+                toast.success("User updated successfully!");
+                // Optionally, clear the form or redirect
+            } catch (error) {
+                console.error("Error updating user:", error);
+                toast.error("No se pudo actualizar el usuario.");
+            }
+        }
+    };
 
-    if (isLoading || loadingUsers) {
-        return <div>Loading...</div>;
+    if (isLoading || loadingUsers || loadingTiposEntrada) {
+        return <div>Cargando...</div>;
     }
     if (!isAdmin) {
         return <div className="mockup-window border border-base-300 w-full p-6">
             <p>Acceso denegado. Se requiere rol de administrador.</p>
         </div>;
     }
-    return (
-        <div className="mockup-window border border-base-300 w-full p-6">
 
+    return (
+        <div className="mockup-window border border-base-300 w-full p-6 relative">  {/* Added relative positioning */}
             {isAdmin && isLoggedIn ? (
                 <>
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-semibold">Admin Panel</h2>
-                        <button onClick={() => navigate('/tipo-entradas/create')} className="btn btn-primary">Crear TipoEntrada</button>
+                        <h2 className="text-xl font-semibold text-center w-full">Panel de Administración</h2>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="w-md md:w-xl mx-auto space-y-4">
-                        {/* Form Fields */}
-                        <div className="relative z-0 w-full mb-5 group">
-                            <input
-                                type="email"
-                                name="email"
-                                id="floating_email"
-                                className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-                                placeholder=" "
-                                value={usuario.email}
-                                onChange={handleChange}
-                                required
-                            />
-                            <label
-                                htmlFor="floating_email"
-                                className="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-                            >
-                                Email address
-                            </label>
-                            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-                        </div>
-                        <div className="relative z-0 w-full mb-5 group">
-                            <input
-                                type="password"
-                                name="password"
-                                id="floating_password"
-                                className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-                                placeholder=" "
-                                value={usuario.password}
-                                onChange={handleChange}
-                                required
-                            />
-                            <label
-                                htmlFor="floating_password"
-                                className="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-                            >
-                                Password
-                            </label>
-                            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-                        </div>
-                        <div className="relative z-0 w-full mb-5 group">
-                            <input
-                                type="password"
-                                name="confirmPassword"
-                                id="floating_repeat_password"
-                                className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-                                placeholder=" "
-                                value={usuario.confirmPassword}
-                                onChange={handleChange}
-                                required
-                            />
-                            <label
-                                htmlFor="floating_repeat_password"
-                                className="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-                            >
-                                Confirm password
-                            </label>
-                            {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
-                        </div>
-                        <div className="grid md:grid-cols-2 md:gap-6">
-                            <div className="relative z-0 w-full mb-5 group">
-                                <input
-                                    type="text"
-                                    name="firstName"
-                                    id="floating_first_name"
-                                    className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-                                    placeholder=" "
-                                    value={usuario.firstName}
-                                    onChange={handleChange}
-                                    required
-                                />
-                                <label
-                                    htmlFor="floating_first_name"
-                                    className="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-                                >
-                                    Nombre
-                                </label>
-                                {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
-                            </div>
-                            <div className="relative z-0 w-full mb-5 group">
-                                <input
-                                    type="text"
-                                    name="lastName"
-                                    id="floating_last_name"
-                                    className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-                                    placeholder=" "
-                                    value={usuario.lastName}
-                                    onChange={handleChange}
-                                    required
-                                />
-                                <label
-                                    htmlFor="floating_last_name"
-                                    className="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-                                >
-                                    Apellidos
-                                </label>
-                                {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
-                            </div>
-                        </div>
-                        <div className="grid md:grid-cols-2 md:gap-6">
-                            <div className="relative z-0 w-full mb-5 group">
-                                <input
-                                    type="tel"
-                                    pattern="[0-9]{9}"
-                                    name="phone"
-                                    id="floating_phone"
-                                    className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-                                    placeholder=" "
-                                    value={usuario.phone}
-                                    onChange={handleChange}
-                                    required
-                                />
-                                <label
-                                    htmlFor="floating_phone"
-                                    className="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-                                >
-                                    Número de teléfono (123456789)
-                                </label>
-                                {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
-                            </div>
-
-                        </div>
-                        <button
-                            type="submit"
-                            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center"
-                        >
-                            Submit
-                        </button>
-                    </form>
-
-                    {/* User List */}
-                    <h2 className="text-xl font-semibold mt-8">Manage Users</h2>
-                    <div className="overflow-x-auto">
+                   <div className="overflow-x-auto">
                         <table className="table w-full">
                             <thead>
                                 <tr>
-                                    <th>Username</th>
-                                    <th>Email</th>
+                                    <th>Nombre de Usuario</th>
+                                    <th>Correo Electrónico</th>
                                     <th>Roles</th>
-                                    <th>Active</th>
-                                    <th>Actions</th>
+                                    <th>Activo</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -292,19 +207,28 @@ export const Ajustes = () => {
                                         <td>{singleUser.username}</td>
                                         <td>{singleUser.email}</td>
                                         <td>{singleUser.roles.join(', ')}</td>
-                                        <td>{singleUser.active ? 'Yes' : 'No'}</td>
+                                        <td>{singleUser.active ? 'Sí' : 'No'}</td>
                                         <td>
+                                            <input
+                                                type="checkbox"
+                                                className="toggle toggle-primary"
+                                                checked={singleUser.roles.includes('admin')}
+                                                onChange={(e) => {
+                                                    const newRoles = e.target.checked ? ['admin', 'user'] : ['user'];
+                                                    handleToggleRole(singleUser._id, newRoles);
+                                                }}
+                                            />
                                             <button
                                                 className="btn btn-xs btn-warning mr-2"
                                                 onClick={() => handleResetPassword(singleUser._id)}
                                             >
-                                                Reset Password
+                                                Restablecer Contraseña
                                             </button>
                                             <button
                                                 className={`btn btn-xs ${singleUser.active ? 'btn-error' : 'btn-success'}`}
                                                 onClick={() => handleDeactivateUser(singleUser._id)}
                                             >
-                                                {singleUser.active ? 'Deactivate' : 'Activate'}
+                                                {singleUser.active ? 'Desactivar' : 'Activar'}
                                             </button>
                                         </td>
                                     </tr>
@@ -312,8 +236,48 @@ export const Ajustes = () => {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Entry Types List */}
+                    <h2 className="text-xl font-semibold mt-8">Tipos de Entrada</h2>
+                    <div className="overflow-x-auto">
+                        <table className="table w-full">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Tipo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {tiposEntrada.map(tipo => (
+                                    <tr key={tipo._id}>
+                                        <td>{tipo.name}</td>
+                                        <td>{tipo.tipo.join(', ')}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Floating Action Button */}
+                    <div className="group fixed bottom-0 right-0 p-2 flex items-end justify-end w-24 h-24 ">
+                        <div
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="text-white shadow-xl flex items-center justify-center p-3 rounded-full bg-gradient-to-r from-yellow-500 to-red-500 z-50 absolute cursor-pointer transition-transform transform group-hover:scale-110"
+                        >
+                            <Plus size={24} />
+                        </div>
+                    </div>
+
+                    <CreateTipoEntradaModal
+                        isOpen={isCreateModalOpen}
+                        onClose={() => setIsCreateModalOpen(false)}
+                        onEntryCreated={handleEntryCreated}
+                        API_URL={API_URL}
+                        storedToken={storedToken}
+                        CloseIcon={X} // Pass the Close icon as a prop
+                    />
                 </>
-            ) : <p>Loading or not authorized.</p>}
+            ) : <p>Cargando o no autorizado.</p>}
         </div>
     );
 };
