@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 import { useNavigate } from "react-router";
 import axios from "axios";
+import ModalMensaje from "../components/ModalMensaje"; // Import ModalMensaje
 
 const Profile = () => {
   const { isLoggedIn, logOutUser, isLoading, authenticateUser, user, setUser } =
@@ -13,6 +14,15 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalContent, setModalContent] = useState({
+        title: '',
+        message: '',
+        onConfirm: null,
+        confirmLabel: 'Confirmar',
+        confirmStyle: 'btn-error',
+        onClose: () => setIsModalOpen(false)
+    });
 
   const navigate = useNavigate();
 
@@ -34,49 +44,62 @@ const Profile = () => {
     verifyAuthAndFetchUser();
   }, [isLoggedIn, isLoading, navigate]);
 
-  const updateUser = async () => {
-    setError(null);
-    setSuccessMessage(null);
+    const confirmUpdateUser = async (updateData) => {
+        try {
+            const token = localStorage.getItem("authToken");
+            const userId = user._id;
 
-    try {
-      const token = localStorage.getItem("authToken");
-      const userId = user._id;
+            const response = await axios.put(
+                `${API_URL}/api/users/${userId}`,
+                updateData,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
 
-      const updateData = {};
-      if (newUsername.trim()) {
-        updateData.username = newUsername;
-      }
-      if (newPassword.trim()) {
-        updateData.password = newPassword;
-      }
-      if (photoURL && photoURL !== user.image) {
-        updateData.image = photoURL;
-      }
-
-      const response = await axios.put(
-        `${API_URL}/api/users/${userId}`,
-        updateData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
+            setUser({ ...user, ...response.data });
+            setSuccessMessage("Profile updated successfully!");
+            setEditing(false);
+        } catch (err) {
+            console.error("Error updating user:", err);
+            setError(
+                err.response?.data?.message ||
+                "Failed to update profile. Please try again."
+            );
+        } finally {
+            setIsModalOpen(false);
         }
-      );
+    };
 
-      setUser({ ...user, ...response.data });
+    const updateUser = (updateData) => {
+        setModalContent({
+            title: 'Actualizar Perfil',
+            message: '¿Estás seguro de que quieres guardar los cambios en tu perfil?',
+            confirmLabel: 'Guardar Cambios',
+            confirmStyle: 'btn-primary',
+            onConfirm: () => confirmUpdateUser(updateData),
+            onClose: () => setIsModalOpen(false)
+        });
+        setIsModalOpen(true);
+    };
 
-      setSuccessMessage("Profile updated successfully!");
-      setEditing(false);
-    } catch (err) {
-      console.error("Error updating user:", err);
-      setError(
-        err.response?.data?.message ||
-          "Failed to update profile. Please try again."
-      );
-    }
-  };
 
   const handleSaveChanges = async () => {
+      setError(null);
+      setSuccessMessage(null);
+
+    const updateData = {};
+    if (newUsername.trim()) {
+      updateData.username = newUsername;
+    }
+    if (newPassword.trim()) {
+      updateData.password = newPassword;
+    }
+    if (photoURL && photoURL !== user.image) {
+      updateData.image = photoURL;
+    }
     if (newUsername.trim() || newPassword.trim() || photoURL) {
-      await updateUser();
+         updateUser(updateData);
     } else {
       setError("Please modify at least one field to save changes.");
     }
@@ -172,6 +195,15 @@ const Profile = () => {
           </div>
         </div>
       )}
+       <ModalMensaje
+            isOpen={isModalOpen}
+            onClose={modalContent.onClose}
+            onConfirm={modalContent.onConfirm}
+            title={modalContent.title}
+            mensaje={modalContent.message}
+            confirmLabel={modalContent.confirmLabel}
+            confirmStyle={modalContent.confirmStyle}
+        />
     </>
   );
 };
