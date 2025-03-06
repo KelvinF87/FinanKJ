@@ -116,7 +116,7 @@ export default function NavBar() {
               <div>
                 <MenuButton className="relative flex rounded-full items-center bg-gray-800 text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden">
                   <span className="absolute -inset-1.5" />
-                  <a className="link link-hover px-6 ">{user.name}</a>
+                  <a className="link link-hover px-6 text-fuchsia-50 ">{user.name}</a>
                   {/* <span className="sr-only">Open user menu</span> */}
                   <img
                     alt=""
