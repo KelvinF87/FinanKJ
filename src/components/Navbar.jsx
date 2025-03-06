@@ -101,21 +101,23 @@ export default function NavBar() {
             </div>
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+            <span></span>
             <button
               type="button"
               className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
             >
               <span className="absolute -inset-1.5" />
               <span className="sr-only">View notifications</span>
-              <BellIcon aria-hidden="true" className="size-6" />
+              {/* <BellIcon aria-hidden="true" className="size-6" /> */}
             </button>
 
             {/* Profile dropdown */}
             <Menu as="div" className="relative ml-3">
               <div>
-                <MenuButton className="relative flex rounded-full bg-gray-800 text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden">
+                <MenuButton className="relative flex rounded-full items-center bg-gray-800 text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden">
                   <span className="absolute -inset-1.5" />
-                  <span className="sr-only">Open user menu</span>
+                  <label className="px-6">{user.name}</label>
+                  {/* <span className="sr-only">Open user menu</span> */}
                   <img
                     alt=""
                     src={
@@ -132,18 +134,19 @@ export default function NavBar() {
               >
                 <MenuItem>
                   <a
+                    id="profile"
                     onClick={() => navigate("/profile")}
                     className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                   >
-                    Your Profile
+                    Perfil
                   </a>
                 </MenuItem>
                 <MenuItem>
                   <a
-                    href="#"
+                    onClick={() => navigate("/config")}
                     className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                   >
-                    Settings
+                    Configuracion
                   </a>
                 </MenuItem>
                 <MenuItem>
@@ -151,7 +154,7 @@ export default function NavBar() {
                     onClick={() => logOutUser()}
                     className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
                   >
-                    Sign out
+                    Cerrar Sesion
                   </a>
                 </MenuItem>
               </MenuItems>
