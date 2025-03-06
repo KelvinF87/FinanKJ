@@ -29,10 +29,24 @@ export const AuthProviderWrapper = (props) => {
             const response = await axios.get(`${API_URL}/auth/verify`, {
                 headers: { Authorization: `Bearer ${storedToken}` },
             });
+
             const user = response.data;
+
+            // **Important: Check if the user is active**
+            if (!user.active) {
+                setAuthError("This account has been deactivated.");
+                setIsLoggedIn(false);
+                setIsLoading(false);
+                setUser(null);
+                localStorage.removeItem("authToken"); // Remove invalid token
+                return;
+            }
+
             setIsLoggedIn(true);
             setIsLoading(false);
             setUser(user);
+            setAuthError(null); // Clear any previous errors
+
         } catch (error) {
             setAuthError(error.response?.data?.message || "La autenticación falló");
             setIsLoggedIn(false);
