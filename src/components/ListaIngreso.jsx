@@ -19,6 +19,7 @@ const ListaIngreso = ({ getIngresos, setCarga, carga }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const[searchTerm, setSearchTerm] = useState("");
     const [filteredIngresos, setFilteredIngresos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
     const columns = ['ingreso', 'tipo.name', 'balance', 'detalles'];
     const handleSearch = (results) => {
@@ -37,6 +38,7 @@ const ListaIngreso = ({ getIngresos, setCarga, carga }) => {
                 });
                 setIngresos(response.data);
                 setFilteredIngresos(response.data);
+                setLoading(false)
             } catch (error) {
                 console.error("Error fetching initial ingresos:", error);
                 // Consider showing a toast message here
@@ -99,8 +101,10 @@ const ListaIngreso = ({ getIngresos, setCarga, carga }) => {
     return (
         <div className="overflow-x-auto w-full sm:px-8 md:px-8 lg:px-8 xl:px-8 sm:max-w-7xx sm:mx-auto">
             <TableSearch data={ingresos} columns={columns} onSearch={handleSearch} />
-            <table className="table">
-                <thead>
+            {loading && <div className="w-full flex justify-center"><span className="loading  w-70 loading-bars"></span></div>}
+
+            {!loading && <table className="table"> 
+              <thead>
                     <tr className="bg-gray-50 text-gray-600">
                         <th>Ingreso</th>
                         <th>Tipo de Ingreso</th>
@@ -142,7 +146,7 @@ const ListaIngreso = ({ getIngresos, setCarga, carga }) => {
                         <th>Acciones</th>
                     </tr>
                 </tfoot>
-            </table>
+            </table>}
             <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
