@@ -24,28 +24,25 @@ const ListaIngreso = () => {
   const { refreshData, ingresos } = useContext(CargaContext);
 
   const columns = ["ingreso", "tipo.name", "detalles"];
+
   const handleSearch = (results) => {
     setFilteredIngresos(results);
     setCurrentPage(1);
   };
 
   useEffect(() => {
-    refreshData();
-  }, []);
-
-  const indexOfLastIngreso = currentPage * ITEMS_PER_PAGE;
-  const indexOfFirstIngreso = indexOfLastIngreso - ITEMS_PER_PAGE;
-  const currentIngresos = (
-    filteredIngresos.length > 0 ? filteredIngresos : ingresos
-  ).slice(indexOfFirstIngreso, indexOfLastIngreso);
-  const totalPages = Math.ceil(
-    (filteredIngresos.length > 0 ? filteredIngresos : ingresos).length /
-      ITEMS_PER_PAGE
-  );
+    setFilteredIngresos(ingresos)
+  }, [ingresos]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
+
+   // Calculate pagination values
+   const indexOfLastIngreso = currentPage * ITEMS_PER_PAGE;
+   const indexOfFirstIngreso = indexOfLastIngreso - ITEMS_PER_PAGE;
+   const currentIngresos = (filteredIngresos.length > 0 ? filteredIngresos: ingresos).slice(indexOfFirstIngreso, indexOfLastIngreso);
+   const totalPages = Math.ceil((filteredIngresos.length > 0 ? filteredIngresos : ingresos).length / ITEMS_PER_PAGE);
 
   const handleDelete = (id) => {
     setIngresoToDelete(id);
@@ -102,7 +99,7 @@ const ListaIngreso = () => {
             </tr>
           </thead>
           <tbody>
-            {ingresos.map((ingreso) => (
+            {currentIngresos.map((ingreso) => (
               <tr key={ingreso._id}>
                 <td>{ingreso.ingreso}</td>
                 <td>{ingreso.tipo?.name || "N/A"}</td>

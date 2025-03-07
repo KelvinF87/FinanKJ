@@ -28,34 +28,18 @@ const ListaGastos = () => {
     setFilteredGastos(results);
     setCurrentPage(1);
   };
-
   useEffect(() => {
-    const initializeGastos = async () => {
-      setLoading(true);
-      try {
-        setFilteredGastos(gastos);
-      } catch (error) {
-        console.error("Error initializing gastos:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-      refreshData()
-  }, []);
-
-  const indexOfLastGasto = currentPage * ITEMS_PER_PAGE;
-  const indexOfFirstGasto = indexOfLastGasto - ITEMS_PER_PAGE;
-  const currentGastos = (
-    filteredGastos.length > 0 ? filteredGastos : gastos
-  ).slice(indexOfFirstGasto, indexOfLastGasto);
-  const totalPages = Math.ceil(
-    (filteredGastos.length > 0 ? filteredGastos : gastos).length /
-      ITEMS_PER_PAGE
-  );
+    setFilteredGastos(gastos)
+  }, [gastos]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
+   // Calculate pagination values
+   const indexOfLastGasto = currentPage * ITEMS_PER_PAGE;
+   const indexOfFirstGasto = indexOfLastGasto - ITEMS_PER_PAGE;
+   const currentGastos = (filteredGastos.length > 0 ? filteredGastos: gastos).slice(indexOfFirstGasto, indexOfLastGasto);
+   const totalPages = Math.ceil((filteredGastos.length > 0 ? filteredGastos : gastos).length / ITEMS_PER_PAGE);
 
   const handleDelete = (id) => {
     setGastoToDelete(id);
@@ -112,7 +96,7 @@ const ListaGastos = () => {
             </tr>
           </thead>
           <tbody>
-            {gastos.map((gasto) => (
+            {currentGastos.map((gasto) => (
               <tr key={gasto._id}>
                 <td>{gasto.gasto}</td>
                 <td>{gasto.tipo?.name || "N/A"}</td>
