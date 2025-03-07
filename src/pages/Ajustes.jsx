@@ -333,7 +333,7 @@ export const Ajustes = () => {
     }
 
     return (
-        <div className="mockup-window border border-base-300 w-full p-6 relative">  {/* Added relative positioning */}
+        <div className="mockup-window border border-base-300 w-full pt-20 sm:pt-0 p-6 relative">  {/* Added relative positioning */}
             {isAdmin && isLoggedIn ? (
                 <>
                     <h2 className="text-xl font-semibold text-center w-full sm:w-auto mb-2 sm:mb-0">Panel de Administración</h2>
