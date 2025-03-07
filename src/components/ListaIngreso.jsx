@@ -4,6 +4,7 @@ import ModalMensaje from "./ModalMensaje";
 import { EditModal } from "./EditarModal";
 import Pagination from "./Pagination";
 import TableSearch from "./TableSearch";  // Import the TableSearch component
+import { Delete, Pencil } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URI;
 const ITEMS_PER_PAGE = 5;
@@ -103,7 +104,7 @@ const ListaIngreso = ({ getIngresos, setCarga, carga }) => {
                     <tr className="bg-gray-50 text-gray-600">
                         <th>Ingreso</th>
                         <th>Tipo de Ingreso</th>
-                        <th>Balance Actual</th>
+                        {/* <th>Balance Actual</th> */}
                         <th>Detalle/Nota</th>
                         <th>Acciones</th>
                     </tr>
@@ -113,20 +114,20 @@ const ListaIngreso = ({ getIngresos, setCarga, carga }) => {
                         <tr key={ingreso._id}>
                             <td>{ingreso.ingreso}</td>
                             <td>{ingreso.tipo?.name || "N/A"}</td>
-                            <td>{ingreso.balance}</td>
+                            {/* <td>{ingreso.balance}</td> */}
                             <td>{ingreso.detalles}</td>
                             <td>
                                 <button
                                     className="btn btn-sm btn-primary"
                                     onClick={() => handleEdit(ingreso)}
                                 >
-                                    Editar
+                                    <Pencil />
                                 </button>
                                 <button
                                     className="btn btn-sm btn-error"
                                     onClick={() => handleDelete(ingreso._id)}
                                 >
-                                    Eliminar
+                                  <Delete />
                                 </button>
                             </td>
                         </tr>
@@ -136,7 +137,7 @@ const ListaIngreso = ({ getIngresos, setCarga, carga }) => {
                     <tr>
                         <th>Ingreso</th>
                         <th>Tipo de Ingreso</th>
-                        <th>Balance Actual</th>
+                        {/* <th>Balance Actual</th> */}
                         <th>Detalle/Nota</th>
                         <th>Acciones</th>
                     </tr>

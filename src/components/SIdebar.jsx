@@ -11,6 +11,7 @@ export default function Sidebar({ navigations }) {
   }
   const navegacion = useNavigate();
   function redireccion(uri) {
+    setIsOpen(false)
     navegacion(uri);
   }
   return (

@@ -4,6 +4,7 @@ import ModalMensaje from "./ModalMensaje";
 import { EditModal } from "./EditarModal";
 import Pagination from "./Pagination";
 import TableSearch from "./TableSearch";  // Import the TableSearch component
+import { Delete, Pencil } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URI;
 const ITEMS_PER_PAGE = 5;
@@ -104,7 +105,7 @@ const ListaGastos = ({ getGastos, setCarga, carga }) => {
                     <tr className="bg-gray-50 text-gray-600">
                         <th>Gasto</th>
                         <th>Tipo de Gasto</th>
-                        <th>Balance Actual</th>
+                        {/* <th>Balance Actual</th> */}
                         <th>Detalle/Nota</th>
                         <th>Acciones</th>
                     </tr>
@@ -114,20 +115,20 @@ const ListaGastos = ({ getGastos, setCarga, carga }) => {
                         <tr key={gasto._id}>
                             <td>{gasto.gasto}</td>
                             <td>{gasto.tipo?.name || "N/A"}</td>
-                            <td>{gasto.balance}</td>
+                            {/* <td>{gasto.balance}</td> */}
                             <td>{gasto.detalles}</td>
                             <td>
                                 <button
                                     className="btn btn-sm btn-primary"
                                     onClick={() => handleEdit(gasto)}
                                 >
-                                    Editar
+                                    <Pencil/>
                                 </button>
                                 <button
                                     className="btn btn-sm btn-error"
                                     onClick={() => handleDelete(gasto._id)}
                                 >
-                                    Eliminar
+                                    <Delete/>
                                 </button>
                             </td>
                         </tr>
@@ -137,7 +138,7 @@ const ListaGastos = ({ getGastos, setCarga, carga }) => {
                     <tr>
                         <th>Gasto</th>
                         <th>Tipo de Gasto</th>
-                        <th>Balance Actual</th>
+                        {/* <th>Balance Actual</th> */}
                         <th>Detalle/Nota</th>
                         <th>Acciones</th>
                     </tr>
