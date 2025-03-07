@@ -9,7 +9,7 @@ import { Ajustes } from "./pages/Ajustes";
 import Profile from "./pages/Profile";
 import { useContext } from "react";
 import { AuthForm } from "./components/Login";
-import CheckUserStatus from "./components/CheckUserStatus";
+import CheckUserStatus from "./contexts/CheckUserStatus";
 
 function App() {
   const API_URL = import.meta.env.VITE_API_URI;
