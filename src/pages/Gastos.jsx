@@ -1,34 +1,16 @@
-// Gastos.jsx
 import { useContext, useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { IngresoModal } from "../components/IngresoModal";
 import { ListaGastos } from "../components/ListaGastos";
 import { AuthContext } from "../contexts/AuthContext";
 import { useNavigate } from "react-router";
-import axios from "axios";
-
-const API_URL = import.meta.env.VITE_API_URI;
+import { CargaContext } from "../contexts/LoadContext"; // Import the CargaContext
 
 export const Gastos = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [gastos, setGastos] = useState([]);
   const { isLoggedIn, isLoading, authenticateUser } = useContext(AuthContext);
-  const token = localStorage.getItem("authToken");
+  const { gastos, carga, refreshData, createGasto } = useContext(CargaContext);
   const navigate = useNavigate();
-  const [carga, setCarga] = useState(false);
-
-  const getGastos = () => {
-    axios
-      .get(`${API_URL}/api/gastos`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        setGastos(response.data);
-      })
-      .catch((error) => console.error("Error fetching gastos:", error));
-  };
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const verifyAuth = async () => {
@@ -43,10 +25,10 @@ export const Gastos = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      // Solo obtener los gastos si el usuario está autenticado
-      getGastos();
+      // Recargar los datos si el usuario está autenticado
+      refreshData();
     }
-  }, [isLoggedIn, carga]);
+  }, [isLoggedIn]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -60,12 +42,10 @@ export const Gastos = () => {
             open={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             tipoVentana={"gasto"}
-            getIngresos={getGastos}
-            setCarga={setCarga}
-            carga={carga}
+            onCreate={createGasto} // Usar la función del contexto para crear un gasto
           />
 
-          <ListaGastos gastos={gastos} getGastos={getGastos} setCarga={setCarga} carga={carga}/>
+          <ListaGastos gastos={gastos} carga={carga} />
           <div className="group fixed bottom-0 right-0 p-2  flex items-end justify-end w-24 h-24 ">
             <div
               onClick={() => setIsModalOpen(true)}

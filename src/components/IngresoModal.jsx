@@ -1,5 +1,4 @@
-// IngresoModal.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import {
   Dialog,
   DialogBackdrop,
@@ -8,10 +7,11 @@ import {
 } from "@headlessui/react";
 import { CircleDollarSign, Check, Ban } from "lucide-react";
 import axios from "axios";
+import { CargaContext } from "../contexts/LoadContext";
 
 const API_URL = import.meta.env.VITE_API_URI;
 
-export const IngresoModal = ({ open, onClose, tipoVentana, getIngresos, setCarga, carga }) => { // Recibir getIngresos
+export const IngresoModal = ({ open, onClose, tipoVentana }) => { // Recibir onCreateIngreso
   const token = localStorage.getItem("authToken");
   const [formData, setFormData] = useState({
     valor: "",
@@ -19,6 +19,8 @@ export const IngresoModal = ({ open, onClose, tipoVentana, getIngresos, setCarga
     detalles: "",
   });
   const [tiposEntrada, setTiposEntrada] = useState([]);
+
+  const { createIngreso, createGasto } = useContext(CargaContext);
 
   const limpiarFormulario = () => {
     setFormData({
@@ -33,10 +35,11 @@ export const IngresoModal = ({ open, onClose, tipoVentana, getIngresos, setCarga
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
+      [name]: value,
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const dataToSend = {
@@ -45,45 +48,30 @@ export const IngresoModal = ({ open, onClose, tipoVentana, getIngresos, setCarga
       detalles: formData.detalles,
     };
 
-    if (tipoVentana === "ingreso") {
-      addIngreso(dataToSend);
-    } else {
-      addGasto(dataToSend);
+    try {
+      if (tipoVentana === "ingreso") {
+        await createIngreso({
+          ingreso: parseFloat(formData.valor),
+          tipo: formData.tipo,
+          detalles: formData.detalles,
+        });
+      } else {
+        // Send gasto for Gasto
+        await createGasto({
+            gasto: parseFloat(formData.valor),
+            tipo: formData.tipo,
+            detalles: formData.detalles,
+          });
+      }
+
+      limpiarFormulario();
+      onClose();
+    } catch (error) {
+      console.error("Error al agregar ingreso/gasto:", error);
+      // Optionally display an error message to the user
     }
-
-    limpiarFormulario();
-    onClose();
   };
 
-  const addIngreso = (data) => {
-    axios
-      .post(`${API_URL}/api/ingresos`, { ingreso: data.valor, tipo: data.tipo, detalles: data.detalles }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        // console.log("Ingreso agregado:", response.data);
-        getIngresos(); // Llamar a getIngresos para recargar la tabla
-        setCarga(!carga)
-      })
-      .catch((error) => console.error("Error al agregar ingreso:", error));
-  };
-
-  const addGasto = (data) => {
-    axios
-      .post(`${API_URL}/api/gastos`, { gasto: data.valor, tipo: data.tipo, detalles: data.detalles }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        // console.log("Gasto agregado:", response.data);
-        getIngresos(); // Llamar a getIngresos para recargar la tabla
-        setCarga(!carga)
-      })
-      .catch((error) => console.error("Error al agregar gasto:", error));
-  };
 
   const fetchTiposEntrada = () => {
     axios

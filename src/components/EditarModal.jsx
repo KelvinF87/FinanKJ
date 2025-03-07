@@ -1,5 +1,5 @@
 // EditModal.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import {
   Dialog,
   DialogBackdrop,
@@ -8,6 +8,7 @@ import {
 } from "@headlessui/react";
 import { CircleDollarSign, Check, Ban } from "lucide-react";
 import axios from "axios";
+import { CargaContext } from "../contexts/LoadContext";
 
 const API_URL = import.meta.env.VITE_API_URI;
 
@@ -15,10 +16,7 @@ export const EditModal = ({
   open,
   onClose,
   tipoVentana,
-  getIngresos,
-  getGastos,
-  setCarga,
-  carga,
+  refreshData, // getIngresos, getGastos, setCarga, carga, REMOVED These
   itemToEdit, // El objeto a editar (ingreso o gasto)
 }) => {
   const token = localStorage.getItem("authToken");
@@ -28,6 +26,8 @@ export const EditModal = ({
     detalles: "",
   });
   const [tiposEntrada, setTiposEntrada] = useState([]);
+
+  const { updateIngreso, updateGasto } = useContext(CargaContext); // bring update functions
 
   // UseEffect para poblar el formulario con los datos del elemento a editar
   useEffect(() => {
@@ -58,51 +58,26 @@ export const EditModal = ({
     };
 
     if (tipoVentana === "ingreso") {
-      updateIngreso(itemToEdit._id, dataToSend);
+      updateIngreso(itemToEdit._id, dataToSend)
+        .then(() => {
+          // console.log("Ingreso actualizado correctamente");
+          onClose();
+          refreshData(); // Refresh data after successful update
+        })
+        .catch((error) => {
+          console.error("Error al actualizar ingreso:", error);
+        });
     } else {
-      updateGasto(itemToEdit._id, dataToSend);
+      updateGasto(itemToEdit._id, dataToSend)
+        .then(() => {
+          // console.log("Gasto actualizado correctamente");
+          onClose();
+          refreshData(); // Refresh data after successful update
+        })
+        .catch((error) => {
+          console.error("Error al actualizar gasto:", error);
+        });
     }
-
-    onClose();
-  };
-
-  // Funciones para actualizar ingresos y gastos
-  const updateIngreso = (id, data) => {
-    axios
-      .put(
-        `${API_URL}/api/ingresos/${id}`,
-        { ingreso: data.valor, tipo: data.tipo, detalles: data.detalles },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      .then((response) => {
-        // console.log("Ingreso actualizado:", response.data);
-        getIngresos();
-        setCarga(!carga);
-      })
-      .catch((error) => console.error("Error al actualizar ingreso:", error));
-  };
-
-  const updateGasto = (id, data) => {
-    axios
-      .put(
-        `${API_URL}/api/gastos/${id}`,
-        { gasto: data.valor, tipo: data.tipo, detalles: data.detalles },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      .then((response) => {
-        // console.log("Gasto actualizado:", response.data);
-        getGastos();
-        setCarga(!carga);
-      })
-      .catch((error) => console.error("Error al actualizar gasto:", error));
   };
 
   const fetchTiposEntrada = () => {

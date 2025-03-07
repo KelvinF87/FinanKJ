@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import ModalMensaje from "./ModalMensaje";
 import { EditModal } from "./EditarModal";
 import Pagination from "./Pagination";
-import TableSearch from "./TableSearch"; // Import the TableSearch component
+import TableSearch from "./TableSearch";
 import { Delete, Pencil } from "lucide-react";
+import { CargaContext } from "../contexts/LoadContext";
 
 const API_URL = import.meta.env.VITE_API_URI;
 const ITEMS_PER_PAGE = 5;
 
-const ListaGastos = ({ getGastos, setCarga, carga }) => {
-  const [gastos, setGastos] = useState([]);
+const ListaGastos = () => {
   const token = localStorage.getItem("authToken");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [gastoToDelete, setGastoToDelete] = useState(null);
@@ -19,42 +19,30 @@ const ListaGastos = ({ getGastos, setCarga, carga }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredGastos, setFilteredGastos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  const columns = ["gasto", "tipo.name", "balance", "detalles"];
+  const { refreshData, gastos } = useContext(CargaContext);
+
+  const columns = ["gasto", "tipo.name", "detalles"];
   const handleSearch = (results) => {
     setFilteredGastos(results);
-    setCurrentPage(1); // Reset to first page after search
+    setCurrentPage(1);
   };
 
   useEffect(() => {
-    const fetchInitialGastos = async () => {
-// console.log("Cargando ",loading)
-      setCarga((prev) => !prev);
+    const initializeGastos = async () => {
+      setLoading(true);
       try {
-        const response = await axios.get(`${API_URL}/api/gastos`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setGastos(response.data);
-        setFilteredGastos(response.data); // Important: Initialize filtered data
-        setLoading(false)
+        setFilteredGastos(gastos);
       } catch (error) {
-        console.error("Error fetching initial gastos:", error);
-        // Consider showing a toast message here
+        console.error("Error initializing gastos:", error);
       } finally {
-        setCarga((prev) => !prev);
+        setLoading(false);
       }
     };
-    fetchInitialGastos();
+      refreshData()
   }, []);
 
-  useEffect(() => {
-    setFilteredGastos(gastos);
-  }, [gastos]);
-
-  // Calculate pagination values
   const indexOfLastGasto = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstGasto = indexOfLastGasto - ITEMS_PER_PAGE;
   const currentGastos = (
@@ -64,6 +52,7 @@ const ListaGastos = ({ getGastos, setCarga, carga }) => {
     (filteredGastos.length > 0 ? filteredGastos : gastos).length /
       ITEMS_PER_PAGE
   );
+
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
@@ -81,8 +70,7 @@ const ListaGastos = ({ getGastos, setCarga, carga }) => {
           Authorization: `Bearer ${token}`,
         },
       });
-      getGastos(); // Recargar la lista después de eliminar
-      setCarga((prev) => !prev);
+      refreshData();
     } catch (error) {
       console.error("Error deleting gasto:", error);
     }
@@ -107,51 +95,55 @@ const ListaGastos = ({ getGastos, setCarga, carga }) => {
   return (
     <div className="overflow-x-auto w-full sm:px-8 md:px-8 lg:px-8 xl:px-8 sm:max-w-7xx sm:mx-auto">
       <TableSearch data={gastos} columns={columns} onSearch={handleSearch} />
-{loading && <div className="w-full flex justify-center"><span className="loading  w-70 loading-bars"></span></div>}
-     {!loading && <table className="table"> 
-        <thead>
-          <tr className="bg-gray-50 text-gray-600">
-            <th>Gasto</th>
-            <th>Tipo de Gasto</th>
-            {/* <th>Balance Actual</th> */}
-            <th>Detalle/Nota</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentGastos.map((gasto) => (
-            <tr key={gasto._id}>
-              <td>{gasto.gasto}</td>
-              <td>{gasto.tipo?.name || "N/A"}</td>
-              {/* <td>{gasto.balance}</td> */}
-              <td>{gasto.detalles}</td>
-              <td>
-                <button
-                  className="btn btn-sm btn-primary"
-                  onClick={() => handleEdit(gasto)}
-                >
-                  <Pencil />
-                </button>
-                <button
-                  className="btn btn-sm btn-error"
-                  onClick={() => handleDelete(gasto._id)}
-                >
-                  <Delete />
-                </button>
-              </td>
+      {loading && (
+        <div className="w-full flex justify-center">
+          <span className="loading w-70 loading-bars"></span>
+        </div>
+      )}
+
+      {!loading && (
+        <table className="table">
+          <thead>
+            <tr className="bg-gray-50 text-gray-600">
+              <th>Gasto</th>
+              <th>Tipo de Gasto</th>
+              <th>Detalle/Nota</th>
+              <th>Acciones</th>
             </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr>
-            <th>Gasto</th>
-            <th>Tipo de Gasto</th>
-            {/* <th>Balance Actual</th> */}
-            <th>Detalle/Nota</th>
-            <th>Acciones</th>
-          </tr>
-        </tfoot>
-      </table>}
+          </thead>
+          <tbody>
+            {gastos.map((gasto) => (
+              <tr key={gasto._id}>
+                <td>{gasto.gasto}</td>
+                <td>{gasto.tipo?.name || "N/A"}</td>
+                <td>{gasto.detalles}</td>
+                <td>
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => handleEdit(gasto)}
+                  >
+                    <Pencil />
+                  </button>
+                  <button
+                    className="btn btn-sm btn-error"
+                    onClick={() => handleDelete(gasto._id)}
+                  >
+                    <Delete />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th>Gasto</th>
+              <th>Tipo de Gasto</th>
+              <th>Detalle/Nota</th>
+              <th>Acciones</th>
+            </tr>
+          </tfoot>
+        </table>
+      )}
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
@@ -167,9 +159,7 @@ const ListaGastos = ({ getGastos, setCarga, carga }) => {
         open={isEditModalOpen}
         onClose={handleCloseEditModal}
         tipoVentana="gasto"
-        getGastos={getGastos}
-        setCarga={setCarga}
-        carga={carga}
+        refreshData={refreshData}
         itemToEdit={gastoToEdit}
       />
     </div>
