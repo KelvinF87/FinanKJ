@@ -309,6 +309,7 @@ export const Dashboard = () => {
             >
               <option value="bar">Bar</option>
               <option value="line">Line</option>
+              <option value="area">area</option>
             </select>
           </div>
 
