@@ -214,12 +214,12 @@ export const Dashboard = () => {
   return (
     <>
       {isLoggedIn && (
-        <div className="container mx-auto p-4">
+        <div className="container mx-auto pt-20 sm:pt-0 p-4 ">
           <h1 className="text-2xl font-bold mb-4 text-center">Dashboard</h1>
 
           {/* Stats Display */}
-          <div className="flex justify-center">
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"> 
+          <div className="flex justify-center ">
+            <div className="grid grid-cols-1  md:grid-cols-3 lg:grid-cols-3 gap-4 mb-6 w-full max-w-300"> 
               <div className="bg-white shadow rounded p-4">
             
                 <h2 className="text-lg font-semibold text-gray-700">
@@ -233,7 +233,7 @@ export const Dashboard = () => {
                   {estadisticas.ingresos.description}
                 </p>
               </div>
-              <div className="bg-white shadow rounded p-4">
+              <div className="bg-white shadow rounded p-4 w-full">
                 <h2 className="text-lg font-semibold text-gray-700">Gastos</h2>
                 <p className="text-2xl font-bold text-red-500">
                   {estadisticas.gastos.value}

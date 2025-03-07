@@ -55,7 +55,7 @@ export const Gastos = () => {
   return (
     <>
       {isLoggedIn && (
-        <div className="mockup-window border border-base-300 w-full">
+        <div className="mockup-window border border-base-300 w-full pt-20 sm:pt-0">
           <IngresoModal
             open={isModalOpen}
             onClose={() => setIsModalOpen(false)}
