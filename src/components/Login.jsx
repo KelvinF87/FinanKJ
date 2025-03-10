@@ -247,7 +247,7 @@ export const AuthForm = () => {
           {isLogin ? "Crea tu usuario" : "Ya tengo cuenta"}
         </button>
         <a className="link" onClick={() => abreModalReset()}>
-          Resect Password
+          Reset Password
         </a>
       </form>
 
