@@ -136,6 +136,14 @@ function CargaProvider({ children }) {
     }
   }, [authToken, API_URL, refreshData]);
 
+  const resetPassword = useCallback(async (email) => {
+    try {
+      await axios.post(`${API_URL}/api/users/reset-pass/${email}`);
+      await refreshData();
+    } catch (error) {
+      console.error("Error reset password:", error);
+    }
+  }, [API_URL, refreshData]);
   return (
     <CargaContext.Provider
       value={{
@@ -151,6 +159,7 @@ function CargaProvider({ children }) {
         deleteIngreso,
         deleteGasto,
         setAuthToken,
+        resetPassword,
       }}
     >
       {children}

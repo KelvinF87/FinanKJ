@@ -3,7 +3,8 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext";
 import ModalMensaje from "./ModalMensaje";
-
+import { ModalReset } from "./ModalResect";
+import { CargaContext } from "../contexts/LoadContext";
 export const AuthForm = () => {
   const API_URL = import.meta.env.VITE_API_URI;
   const [isLogin, setIsLogin] = useState(true);
@@ -62,13 +63,19 @@ export const AuthForm = () => {
         authenticateUser();
 
         if (!isLoggedIn) {
-          setModalMessage("Usuario no puede ser logueado o está desactivado. Contactar con el administrador.");
+          setModalMessage(
+            "Usuario no puede ser logueado o está desactivado. Contactar con el administrador."
+          );
           setIsModalOpen(true);
         } else {
           navigate("/");
         }
       } catch (error) {
-        if (error.response && error.response.data && error.response.data.message) {
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.message
+        ) {
           setErrorMessage(error.response.data.message);
         } else {
           setErrorMessage("Error al iniciar sesión");
@@ -93,12 +100,18 @@ export const AuthForm = () => {
 
       try {
         const response = await axios.post(`${API_URL}/auth/signup`, signupData);
-        setSuccessMessage("Usuario creado exitosamente. Por favor, inicia sesión.");
+        setSuccessMessage(
+          "Usuario creado exitosamente. Por favor, inicia sesión."
+        );
         navigate("login");
         clearForm();
       } catch (error) {
         console.error("Error al registrar usuario:", error);
-        if (error.response && error.response.data && error.response.data.message) {
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.message
+        ) {
           setErrorMessage(error.response.data.message);
         } else {
           setErrorMessage("Error al registrar usuario");
@@ -107,8 +120,30 @@ export const AuthForm = () => {
     }
   };
 
+  const { resetPassword, carga } = useContext(CargaContext);
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
+  };
+  const [modalReset, setModalReset] = useState(false);
+  const [popMensaje, setPopMensaje] = useState(false);
+
+  const abreModalReset = () => {
+    setModalReset(true);
+    console.log("ok");
+  };
+  const handleCloseModalReset = () => {
+    setModalReset(false);
+  };
+
+  const handleCloseModalResetConfirm = (confirm) => {
+    resetPassword(confirm);
+    // console.log("Confirmado ", confirm);
+    setModalReset(false);
+    setPopMensaje(true);
+    setTimeout(() => {
+      setPopMensaje(false);
+    }, 8000);
   };
 
   return (
@@ -117,6 +152,13 @@ export const AuthForm = () => {
         onSubmit={handleSubmit}
         className="flex flex-col items-center justify-center h-screen"
       >
+        {popMensaje && (
+          <div className="toast toast-top toast-center">
+            <div className="alert alert-success">
+              <span>Le enviamos un email con su nueva contraseña.</span>
+            </div>
+          </div>
+        )}
         {!isLogin && (
           <>
             <input
@@ -197,9 +239,16 @@ export const AuthForm = () => {
         {errorMessage && <p className="text-red-500">{errorMessage}</p>}
         {successMessage && <p className="text-green-500">{successMessage}</p>}
 
-        <button type="button" className="btn btn-link my-2" onClick={toggleFormMode}>
+        <button
+          type="button"
+          className="btn btn-link my-2"
+          onClick={toggleFormMode}
+        >
           {isLogin ? "Crea tu usuario" : "Ya tengo cuenta"}
         </button>
+        <a className="link" onClick={() => abreModalReset()}>
+          Resect Password
+        </a>
       </form>
 
       <ModalMensaje
@@ -211,6 +260,13 @@ export const AuthForm = () => {
         confirmLabel="Entendido"
         confirmStyle="btn-primary"
       />
+      {
+        <ModalReset
+          isOpen={modalReset}
+          onClose={handleCloseModalReset}
+          onConfirm={handleCloseModalResetConfirm}
+        />
+      }
     </>
   );
 };
