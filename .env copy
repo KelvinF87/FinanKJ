@@ -1,3 +1,4 @@
 VITE_API_URI=https://kjserver-k.onrender.com
 VITE_PUERTO=3001
 VITE_API_PRE=kj.onrender.com
+VITE_API_IA=https://kj0de3-94-248-105-51.ngrok-free.app/webhook/248b470a-e168-4e32-a206-130ef72feb7b
