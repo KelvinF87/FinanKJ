@@ -48,7 +48,7 @@ const ChatComponent = () => {
   return (
     <div className="relative">
       {isChatOpen && (
-        <div className="fixed bottom-4 left-13 bg-white border rounded-lg shadow-lg w-96 h-[60vh] overflow-hidden flex flex-col">
+        <div className="fixed bottom-19 sm:fixed bottom-4 lg:fixed lg:bottom-4 lg:left-13 bg-white border rounded-lg shadow-lg w-full sm:w-90 lg:w-90 h-[60vh] overflow-hidden flex flex-col">
           <div className="bg-blue-600 text-white p-3 rounded-t-lg flex justify-between items-center">
             <h2 className="text-lg font-semibold">FinanKBot</h2>
             <button onClick={() => setIsChatOpen(false)} className="hover:text-gray-200 focus:outline-none">
