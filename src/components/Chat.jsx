@@ -49,17 +49,33 @@ const ChatComponent = () => {
     <div className="relative">
       {isChatOpen && (
         <div className="fixed bottom-15 sm:fixed bottom-4 lg:fixed lg:bottom-4 lg:left-13 bg-white border rounded-lg shadow-lg w-full sm:w-90 lg:w-90 h-[60vh] overflow-hidden flex flex-col">
-          <div className="bg-blue-600 text-white p-3 rounded-t-lg flex justify-between items-center">
+          <div className="bg-gray-800 text-white p-3 rounded-t-lg flex justify-between items-center">
             <h2 className="text-lg font-semibold">FinanKBot</h2>
-            <button onClick={() => setIsChatOpen(false)} className="hover:text-gray-200 focus:outline-none">
+            <button
+              onClick={() => setIsChatOpen(false)}
+              className="hover:text-gray-200 focus:outline-none"
+            >
               &times;
             </button>
           </div>
 
-          <div ref={chatContainerRef} className="flex-grow overflow-y-auto p-4 space-y-2">
+          <div
+            ref={chatContainerRef}
+            className="flex-grow overflow-y-auto p-4 space-y-2"
+          >
             {messages.map((msg, index) => (
-              <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`rounded-lg py-2 px-3 max-w-[80%] ${msg.sender === 'user' ? 'bg-blue-200' : 'bg-gray-200'}`} style={{ color: 'black' }}>
+              <div
+                key={index}
+                className={`flex ${
+                  msg.sender === "user" ? "justify-end" : "justify-start"
+                }`}
+              >
+                <div
+                  className={`rounded-lg py-2 px-3 max-w-[80%] ${
+                    msg.sender === "user" ? "bg-blue-200" : "bg-gray-200"
+                  }`}
+                  style={{ color: "black" }}
+                >
                   {msg.text}
                 </div>
               </div>
@@ -71,7 +87,7 @@ const ChatComponent = () => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
               className="flex-grow border text-black rounded-md p-2 focus:outline-none focus:ring focus:border-blue-300"
               placeholder="Escribe un mensaje..."
             />
@@ -87,9 +103,9 @@ const ChatComponent = () => {
 
       <button
         onClick={() => setIsChatOpen(!isChatOpen)}
-        className="fixed bottom-2 left-4 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg"
+        className="fixed bottom-2 w-12 h-12 left-4 bg-blue-400 transition-all duration-300 ease-in-out hover:bg-blue-600 text-white p-3 rounded-full shadow-lg"
       >
-        💬
+        🤖
       </button>
     </div>
   );
