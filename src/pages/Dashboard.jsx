@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useCallback } from "react"; // Import useCallback
+import { useContext, useEffect, useState, useCallback } from "react"; // Import useCallback
 import { AgCharts } from "ag-charts-react";
 import { AuthContext } from "../contexts/AuthContext";
 import { useNavigate } from "react-router";
