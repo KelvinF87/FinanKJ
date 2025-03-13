@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../contexts/AuthContext';
 
-// const URI_N8N = "https://0de3-94-248-105-51.ngrok-free.app/webhook-test/248b470a-e168-4e32-a206-130ef72feb7b";
 const URI_N8N = import.meta.env.VITE_API_IA;
 
 const ChatComponent = () => {
@@ -35,7 +34,9 @@ const ChatComponent = () => {
       const aiResponse = data[0]?.output;
 
       if (aiResponse) {
-        setMessages(prev => [...prev, { sender: 'ai', text: aiResponse }]);
+        // Formatear la respuesta antes de mostrarla
+        const formattedResponse = formatApiResponse(aiResponse);
+        setMessages(prev => [...prev, { sender: 'ai', text: formattedResponse }]);
       } else {
         throw new Error('Respuesta inesperada del servidor.');
       }
@@ -43,6 +44,51 @@ const ChatComponent = () => {
       console.error('Error en la API:', error);
       setMessages(prev => [...prev, { sender: 'error', text: 'Error al conectar con el servidor.' }]);
     }
+  };
+
+  // Función para formatear la respuesta de la API
+  const formatApiResponse = (text) => {
+    const lines = text.split('\n');
+    return lines.map((line, index) => {
+      // Detectar títulos
+      if (line.startsWith('###')) {
+        return <h3 key={index} className="font-semibold mt-2">{line.replace('###', '')}</h3>;
+      }
+      // Detectar elementos de lista (ingresos y gastos)
+      if (line.match(/^\d+\.\s*\*\*(.+?)\*\*\s*-\s*Detalles:/)) {
+        const match = line.match(/^\d+\.\s*\*\*(.+?)\*\*\s*-\s*Detalles:\s*(.+)/);
+          if (match) {
+              const amount = match[1].trim();
+              const details = match[2].trim();
+              return (
+                  <div key={index} className="mb-1">
+                      <b>{amount}</b> - {details}
+                  </div>
+              );
+          }
+      }
+
+      // Detectar fechas
+      if (line.startsWith('   Fecha:')) {
+        const dateString = line.replace('   Fecha:', '').trim();
+        const formattedDate = formatDate(dateString);
+        return <div key={index} className="text-gray-500 ml-4">Fecha: {formattedDate}</div>;
+      }
+
+       // Detectar totales y balance
+       if (line.startsWith('- **Total Ingresos:**') || line.startsWith('- **Total Gastos:**') || line.startsWith('🔹 **Balance total:**')) {
+           return <p key={index} className="font-medium">{line}</p>;
+       }
+
+      // Para el resto, simplemente devolver el texto
+      return <p key={index}>{line}</p>;
+    });
+  };
+
+  // Función auxiliar para formatear fechas (opcional, pero mejora la legibilidad)
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }); // Formato: DD de Mes de AAAA
   };
 
   return (
@@ -55,7 +101,7 @@ const ChatComponent = () => {
               onClick={() => setIsChatOpen(false)}
               className="hover:text-gray-200 focus:outline-none"
             >
-              &times;
+              ×
             </button>
           </div>
 
